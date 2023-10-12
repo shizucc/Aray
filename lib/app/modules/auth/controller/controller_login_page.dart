@@ -3,8 +3,25 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class UserController extends GetxController {
+  final _obj = ''.obs;
+  set obj(value) => _obj.value = value;
+  get obj => _obj.value;
+}
 
 class LoginPageController extends GetxController {
+  final _idUser = ''.obs;
+  set idUser(value) => _idUser.value = value;
+  get idUser => _idUser.value;
+
+  Future<void> setSession(String id) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('userId', id);
+    print("Session Saved");
+  }
+
   // Fungsi untuk login by gogle
   void signInWithGoogle() async {
     GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
@@ -27,7 +44,6 @@ class LoginPageController extends GetxController {
     final userRef = FirebaseFirestore.instance.collection('user').withConverter(
         fromFirestore: (snapshot, _) => UserModel.fromJson(snapshot.data()!),
         toFirestore: (user, _) => user.toJson());
-
     var username = await userRef
         .where('username', isEqualTo: userCredential.user?.displayName)
         .where('email', isEqualTo: userCredential.user?.email)
@@ -35,6 +51,7 @@ class LoginPageController extends GetxController {
 
     if (username.docs.isNotEmpty) {
       print(username.docs.first.data().email);
+      print(username.docs.first.id);
     } else {
       userRef
           .add(UserModel(
@@ -42,5 +59,6 @@ class LoginPageController extends GetxController {
               username: userCredential.user?.displayName))
           .then((_) {});
     }
+    setSession(username.docs.first.id);
   }
 }
