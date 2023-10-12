@@ -1,8 +1,11 @@
-import 'package:aray/loginpage.dart';
+import 'package:aray/app/modules/auth/views/login_page.dart';
+import 'package:aray/app/modules/projects/views/project.dart';
+import 'package:aray/app/routes/app_pages.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:get/get.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -19,47 +22,37 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
+    return GetMaterialApp(
+      title: 'Aray',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            print("Error");
-            return Text(snapshot.error.toString());
-          }
-          if (snapshot.connectionState == ConnectionState.active) {
-            if (snapshot.data == null) {
-              return const LoginPage();
-            } else {
-              return MyHomePage(
-                  title: FirebaseAuth.instance.currentUser!.displayName!);
-            }
-          } else {
-            return Container();
-          }
-        },
-      ),
+      getPages: AppPages.routes,
+      home: _streamUser(),
     );
   }
 }
 
+Widget _streamUser() {
+  return StreamBuilder<User?>(
+    stream: FirebaseAuth.instance.authStateChanges(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.active) {
+        if (snapshot.data == null) {
+          return const LoginPage();
+        } else {
+          return const Project();
+        }
+      } else {
+        return CircularProgressIndicator(); // Atau widget lain untuk menunggu
+      }
+    },
+  );
+}
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
