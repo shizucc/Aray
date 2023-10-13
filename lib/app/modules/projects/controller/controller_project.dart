@@ -1,3 +1,4 @@
+import 'package:aray/app/data/model/model_user_workspace.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
@@ -24,65 +25,26 @@ class ProjectController extends GetxController {
   // Logika untuk menampilkan project dari workspace tertentu
   Future<void> fetchDataProject() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final userId = prefs.get('userId');
+    // Init the workspaces id
+    List<UserWorkspace> userWorkspaces = [];
+
+    // Loop di firestore untuk mencari workspace id milik user
     final workspaceRef = FirebaseFirestore.instance
-        .collection('workspace')
+        .collection('user_workspace')
         .withConverter(
             fromFirestore: (snapshot, _) =>
-                Workspace.fromJson(snapshot.data()!),
-            toFirestore: (Workspace workspace, _) => workspace.toJson());
+                UserWorkspace.fromJson(snapshot.data()!),
+            toFirestore: (UserWorkspace userWorkspace, _) =>
+                userWorkspace.toJson());
 
-    var projects = await workspaceRef.get();
-    var members = projects.docs.first.data();
-    // print(members.members.first['user']);
-    getUserByWorkspace("aSn6COQKq3fQnxCSLGtG");
-
-    // var user = members['user'];
-    // print(user);
-    // DocumentReference<Map<String, dynamic>> userSnapshot =
-    //     await FirebaseFirestore.instance.doc(user);
-  }
-
-  Future<void> getUserByWorkspace(String workspaceId) async {
-    try {
-      // Mengakses koleksi "workspace" pada Firestore
-      DocumentSnapshot workspaceDoc = await FirebaseFirestore.instance
-          .collection('workspace')
-          .doc(workspaceId)
-          .get();
-
-      if (workspaceDoc.exists) {
-        // Mengambil data "member" dari dokumen workspace
-        dynamic membersDump = workspaceDoc.data();
-        List<dynamic> members = membersDump['member'];
-
-        for (var member in members) {
-          // Memberikan perhatian terhadap role yang sesuai (creator, co-creator)
-          if (member['role'] == 'creator' || member['role'] == 'co-creator') {
-            // Mendapatkan ID pengguna dari referensi Firestore
-            String userId = member['user'].split('/')[1];
-
-            // Mengakses koleksi "user" pada Firestore untuk mendapatkan data pengguna
-            DocumentSnapshot userDoc = await FirebaseFirestore.instance
-                .collection('user')
-                .doc(userId)
-                .get();
-
-            if (userDoc.exists) {
-              // Data pengguna berhasil ditemukan
-              var userData = userDoc.data();
-              print(userData);
-            } else {
-              print('Pengguna tidak ditemukan');
-            }
-          }
-        }
-      } else {
-        print('Workspace tidak ditemukan');
+    await workspaceRef.where('user_id', isEqualTo: userId).get().then((value) {
+      for (var element in value.docs) {
+        UserWorkspace userWorkspace = element.data();
+        userWorkspaces.add(userWorkspace);
+        // print(userWorkspace);
       }
-    } catch (e) {
-      print('Terjadi kesalahan: $e');
-    }
+    });
+    print(userWorkspaces);
   }
-
-// Panggil fungsi untuk mencari data pengguna berdasarkan workspace
 }

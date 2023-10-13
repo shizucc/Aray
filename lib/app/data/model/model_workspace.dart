@@ -21,7 +21,7 @@ class Workspace {
       name: json['name'],
       description: json['description'],
       members: json['members'],
-      updatedAt: (json['updated_at'] as Timestamp).toDate() ?? DateTime.now(),
+      updatedAt: (json['updated_at'] as Timestamp).toDate(),
       createdAt: DateTime.now(),
       projects: json['projects'] ?? []);
 
