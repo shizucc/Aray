@@ -1,11 +1,12 @@
 import 'package:aray/app/data/model/model_project.dart';
+import 'package:aray/app/data/model/model_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Workspace {
   String? name;
   String? description;
-  List<dynamic> members;
-  List<dynamic>? projects;
+  List<UserModel>? members;
+  List<Project>? projects;
   DateTime? createdAt;
   DateTime? updatedAt;
 

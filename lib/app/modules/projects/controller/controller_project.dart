@@ -8,10 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ProjectController extends GetxController {
   final User? user = FirebaseAuth.instance.currentUser;
-
-  final _obj = ''.obs;
-  set obj(value) => this._obj.value = value;
-  get obj => this._obj.value;
+  // List<UserWorkspace> userWorkspaces = [].obs as List<UserWorkspace>;
 
   void logOutWithGoogle() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -22,13 +19,16 @@ class ProjectController extends GetxController {
     await prefs.remove('userId');
   }
 
+  Future<CollectionReference> fetchDataWorkspaces() async =>
+      FirebaseFirestore.instance.collection('workspace');
+
   // Logika untuk menampilkan project dari workspace tertentu
-  Future<void> fetchDataProject() async {
+  Future<List<DocumentReference>> fetchDataWorkspace() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final userId = prefs.get('userId');
     // Init the workspaces id
-    List<UserWorkspace> userWorkspaces = [];
-
+    List<DocumentSnapshot<UserWorkspace>> userWorkspaces = [];
+    // List<DocumentReference<UserWorkspace>> userWorkspacesReference = [];
     // Loop di firestore untuk mencari workspace id milik user
     final workspaceRef = FirebaseFirestore.instance
         .collection('user_workspace')
@@ -40,11 +40,41 @@ class ProjectController extends GetxController {
 
     await workspaceRef.where('user_id', isEqualTo: userId).get().then((value) {
       for (var element in value.docs) {
-        UserWorkspace userWorkspace = element.data();
+        DocumentSnapshot<UserWorkspace> userWorkspace = element;
         userWorkspaces.add(userWorkspace);
-        // print(userWorkspace);
+        // print(userWorkspace.id);
       }
     });
-    print(userWorkspaces);
+    // this.userWorkspaces = userWorkspaces;
+    // Loping collection workspace untuk dapet workspace dengan id tertentu
+    List<DocumentReference> workspaces = [];
+    await Future.forEach(userWorkspaces, (userWorkspace) async {
+      final UserWorkspace? workspaceId = userWorkspace.data();
+      final workspace = FirebaseFirestore.instance
+          .collection('workspace')
+          .doc(workspaceId?.workspaceId);
+
+      // workspaces.add(await workspace.get());
+      workspaces.add(workspace);
+    });
+
+    return workspaces;
+
+    // for (DocumentReference workspaceRef in workspaces) {
+    //   QuerySnapshot projectSnapshot =
+    //       await workspaceRef.collection('project').get();
+    //   for (var projectDoc in projectSnapshot.docs) {
+    //     // Lakukan sesuatu dengan data proyek
+    //     var projectData = projectDoc.data();
+    //     // print(projectData);
+    //   }
+    // }
+    // print(workspaces.first.collection('project').get());
+    // var myProjectRef =
+    //     workspaces.first.collection('project').get().then((value) {
+    //   print(value.docs.first.data());
+    // });
   }
+
+  Future<void> fetchDataProject() async {}
 }
