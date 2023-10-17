@@ -3,8 +3,8 @@ import 'package:aray/app/modules/auth/bindings/bindings_login_page.dart';
 import 'package:aray/app/modules/auth/views/login_page.dart';
 import 'package:aray/app/modules/projects/bindings/bindings_project.dart';
 import 'package:aray/app/modules/projects/views/project.dart';
-import 'package:aray/app/modules/worspaces/bindings/bindings_workspace.dart';
-import 'package:aray/app/modules/worspaces/views/workspaces_view.dart';
+import 'package:aray/app/modules/workspaces/bindings/bindings_workspace.dart';
+import 'package:aray/app/modules/workspaces/views/workspaces_view.dart';
 import 'package:get/get.dart';
 part 'app_routes.dart';
 
