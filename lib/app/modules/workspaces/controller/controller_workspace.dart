@@ -20,6 +20,11 @@ class WorkspaceController extends GetxController {
     await prefs.remove('userId');
   }
 
+  Future<String> getWorkspaceName(DocumentReference<Workspace> docs) async {
+    final name = await docs.get().then((value) => value.data()!.name);
+    return name.toString();
+  }
+
   Future<List<DocumentReference<Workspace>>> fetchWorkspaces() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final userId = prefs.get('userId');
@@ -54,16 +59,16 @@ class WorkspaceController extends GetxController {
     return listWorkspace;
   }
 
-  // Fungsi untuk menghasilkan list project dengan parameter Workspace
-
-  Future<dynamic> fetchProjects(DocumentReference<Workspace> workspace) async {
+  // Fungsi untuk menghasilkan list project dengan parameter satu buah Workspace
+  Future<List<QueryDocumentSnapshot<Project>>> fetchProjects(
+      DocumentReference<Workspace> workspace) async {
     final projectRef = workspace.collection('project').withConverter(
         fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
         toFirestore: (Project project, _) => project.toJson());
 
-    final List<QueryDocumentSnapshot<Project>> listProjectDump =
+    final List<QueryDocumentSnapshot<Project>> listProject =
         await projectRef.get().then((value) => value.docs);
 
-    final List<DocumentReference<Project>> listProject = [];
+    return listProject;
   }
 }
