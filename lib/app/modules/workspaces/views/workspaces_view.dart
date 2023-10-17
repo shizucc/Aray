@@ -1,6 +1,7 @@
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:aray/app/modules/workspaces/controller/controller_workspace.dart';
+import 'package:aray/app/routes/app_pages.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -75,7 +76,13 @@ class WorkspacePage extends StatelessWidget {
                                         children: projectList.map((project) {
                                           return ListTile(
                                             title: Text(project.data().name),
-                                            onTap: () {},
+                                            onTap: () {
+                                              Get.toNamed(Routes.PROJECT,
+                                                  arguments: {
+                                                    "workspace": workspace,
+                                                    "project": project
+                                                  });
+                                            },
                                           );
                                         }).toList(),
                                       );
