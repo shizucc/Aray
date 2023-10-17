@@ -1,5 +1,6 @@
 import 'package:aray/app/modules/auth/views/login_page.dart';
 import 'package:aray/app/modules/projects/views/project.dart';
+import 'package:aray/app/modules/worspaces/views/workspaces_view.dart';
 import 'package:aray/app/routes/app_pages.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -42,7 +43,7 @@ Widget _streamUser() {
         if (snapshot.data == null) {
           return const LoginPage();
         } else {
-          return const Project();
+          return const WorkspacePage();
         }
       } else {
         return CircularProgressIndicator(); // Atau widget lain untuk menunggu
