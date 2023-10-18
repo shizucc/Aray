@@ -13,8 +13,8 @@ class Workspace {
       this.updatedAt});
 
   factory Workspace.fromJson(Map<String, dynamic> json) => Workspace(
-        name: json['name'],
-        description: json['description'],
+        name: json['name'] as String,
+        description: json['description'] as String,
         updatedAt: (json['updated_at'] as Timestamp).toDate(),
         createdAt: DateTime.now(),
       );

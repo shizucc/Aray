@@ -6,26 +6,30 @@ class Project {
   DateTime createdAt;
   DateTime updatedAt;
   Map<String, dynamic> personalize;
+  int order;
 
   Project(
       {required this.name,
       this.description = '',
       required this.createdAt,
       required this.updatedAt,
-      required this.personalize});
+      required this.personalize,
+      required this.order});
 
   factory Project.fromJson(Map<String, dynamic> json) => Project(
-      name: json['name'],
-      description: json['description'],
+      name: json['name'] as String,
+      description: json['description'] as String,
       createdAt: (json['created_at'] as Timestamp).toDate(),
       updatedAt: (json['updated_at'] as Timestamp).toDate(),
-      personalize: json['personalize']);
+      personalize: json['personalize'] as Map<String, dynamic>,
+      order: json['order'] as int);
 
   Map<String, dynamic> toJson() => {
         'name': name,
         'description': description,
         'created_at': Timestamp.fromDate(createdAt),
         'updated_at': Timestamp.fromDate(updatedAt),
-        'personalize': personalize
+        'personalize': personalize,
+        'order': order,
       };
 }

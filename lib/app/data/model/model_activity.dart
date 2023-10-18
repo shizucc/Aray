@@ -7,29 +7,65 @@ class Activity {
   DateTime? endTime;
   String coverImage;
   List<dynamic>? files;
+  bool timestamp;
+  int order;
 
-  Activity(
+  Activity.withTimestamp(
       {this.coverImage = '',
       required this.name,
       this.description = '',
       this.startTime,
       this.endTime,
-      this.files});
+      this.files,
+      required this.timestamp,
+      required this.order});
 
-  factory Activity.fromJson(Map<String, dynamic> json) => Activity(
-        name: json['name'],
-        description: json['description'],
-        coverImage: json['cover_image'],
-        startTime: (json['start_time'] as Timestamp).toDate(),
-        endTime: (json['end_time'] as Timestamp).toDate(),
-        files: json['files'] ?? [],
-      );
-  Map<String, dynamic> toJson() => {
-        "name": name,
-        "description": description,
-        "cover_image": coverImage,
-        "start_time": startTime,
-        "end_time": endTime,
-        "files": files,
-      };
+  Activity.withoutTimestamp(
+      {this.coverImage = '',
+      required this.name,
+      this.description = '',
+      this.files,
+      required this.timestamp,
+      required this.order});
+
+  factory Activity.fromJson(Map<String, dynamic> json) {
+    final timestamp = json['timestamp'];
+    if (timestamp) {
+      return Activity.withTimestamp(
+          name: json['name'] as String,
+          description: json['description'] as String,
+          coverImage: json['cover_image'] as String,
+          startTime: (json['start_time'] as Timestamp).toDate(),
+          endTime: (json['end_time'] as Timestamp).toDate(),
+          files: json['files'] ?? [],
+          timestamp: timestamp as bool,
+          order: json['order'] as int);
+    } else {
+      return Activity.withoutTimestamp(
+          name: json['name'] as String,
+          description: json['description'] as String,
+          coverImage: json['cover_image'] as String,
+          files: json['files'] ?? [],
+          timestamp: timestamp as bool,
+          order: json['order'] as int);
+    }
+  }
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> json = {
+      "name": name,
+      "description": description,
+      "cover_image": coverImage,
+      "files": files,
+      "timestamp": false,
+      "order": order
+    };
+
+    if (startTime != null && endTime != null) {
+      json["start_time"] = startTime;
+      json["end_time"] = endTime;
+      json["timestamp"] = true;
+    }
+
+    return json;
+  }
 }
