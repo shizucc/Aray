@@ -6,7 +6,7 @@ class Activity {
   DateTime? startTime;
   DateTime? endTime;
   String coverImage;
-  List<String>? files;
+  List<dynamic>? files;
 
   Activity(
       {this.coverImage = '',

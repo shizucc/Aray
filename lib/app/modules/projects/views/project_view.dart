@@ -1,3 +1,4 @@
+import 'package:aray/app/data/model/model_activity.dart';
 import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
@@ -54,7 +55,8 @@ class ProjectView extends StatelessWidget {
                 stream: controller.streamCards(projectSnapshot, workspaceRef),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
-                    return const Text('Something went wrong');
+                    print(snapshot.error);
+                    return Text(snapshot.error.toString());
                   }
 
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -63,7 +65,34 @@ class ProjectView extends StatelessWidget {
                   return Column(
                     children: snapshot.data!.docs.map((cardSnapshot) {
                       final CardModel card = cardSnapshot.data();
-                      return Text(card.name);
+                      return Column(
+                        children: [
+                          Text(card.name),
+                          StreamBuilder<QuerySnapshot<Activity>>(
+                            stream: controller.streamActivities(cardSnapshot),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasError) {
+                                return const Text('Something went wrong');
+                              }
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const CircularProgressIndicator();
+                              }
+                              return Column(
+                                children: [
+                                  Text("activity dari ${card.name}"),
+                                  Column(
+                                    children: snapshot.data!.docs
+                                        .map((activitySnapshot) {
+                                      return Text(activitySnapshot.data().name);
+                                    }).toList(),
+                                  )
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      );
                     }).toList(),
                   );
                 }),

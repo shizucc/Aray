@@ -1,14 +1,8 @@
 import 'package:aray/app/data/model/model_activity.dart';
 import 'package:aray/app/data/model/model_card.dart';
-import 'package:aray/app/data/model/model_project.dart';
-import 'package:aray/app/data/model/model_user_workspace.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ProjectController extends GetxController {
   final RxString cardPath = ''.obs;
@@ -43,6 +37,7 @@ class ProjectController extends GetxController {
                 CardModel.fromJson(snapshot.data()!),
             toFirestore: (CardModel card, _) => card.toJson());
     final Stream<QuerySnapshot<CardModel>> listCard = cardRef.snapshots();
+    cardPath.value = cardRef.path;
     yield* listCard;
   }
 
@@ -62,8 +57,9 @@ class ProjectController extends GetxController {
   }
 
   // Stream Activity dengan parameter satu card
-  Stream<dynamic> streamActivities(
+  Stream<QuerySnapshot<Activity>> streamActivities(
       QueryDocumentSnapshot<CardModel> cardSnapshot) async* {
+    print(cardPath.value);
     final activityRef = FirebaseFirestore.instance
         .collection(cardPath.value)
         .doc(cardSnapshot.id)
