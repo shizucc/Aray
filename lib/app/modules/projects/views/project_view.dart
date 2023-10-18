@@ -3,6 +3,7 @@ import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:aray/app/modules/projects/controller/controller_project.dart';
+import 'package:aray/app/routes/app_pages.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -28,29 +29,6 @@ class ProjectView extends StatelessWidget {
             Text(project.name),
             Text(project.description),
             Text(project.createdAt.toString()),
-            // FutureBuilder(
-            //     future: controller.fetchCards(projectSnapshot, workspaceRef),
-            //     builder: (context, cardSnapshot) {
-            //       if (cardSnapshot.connectionState == ConnectionState.waiting) {
-            //         return const CircularProgressIndicator();
-            //       } else if (cardSnapshot.hasError) {
-            //         return Text("Error: ${cardSnapshot.error}");
-            //       } else if (!cardSnapshot.hasData ||
-            //           cardSnapshot.data!.isEmpty) {
-            //         return const Text("Invalid Name");
-            //       } else {
-            //         final cardList = cardSnapshot.data!;
-            //         return Column(
-            //           children: cardList.map((card) {
-            //             final cardData = card.data();
-            //             return ListTile(
-            //               title: Text(cardData.name),
-            //               onTap: () {},
-            //             );
-            //           }).toList(),
-            //         );
-            //       }
-            //     }),
             StreamBuilder<QuerySnapshot<CardModel>>(
                 stream: controller.streamCards(projectSnapshot, workspaceRef),
                 builder: (context, snapshot) {
@@ -84,7 +62,18 @@ class ProjectView extends StatelessWidget {
                                   Column(
                                     children: snapshot.data!.docs
                                         .map((activitySnapshot) {
-                                      return Text(activitySnapshot.data().name);
+                                      return ListTile(
+                                        onTap: () {
+                                          Get.toNamed(Routes.ACTIVITY,
+                                              arguments: {
+                                                "activity": activitySnapshot,
+                                                "activity_path":
+                                                    controller.activityPath
+                                              });
+                                        },
+                                        title:
+                                            Text(activitySnapshot.data().name),
+                                      );
                                     }).toList(),
                                   )
                                 ],

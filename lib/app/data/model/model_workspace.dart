@@ -1,5 +1,3 @@
-import 'package:aray/app/data/model/model_project.dart';
-import 'package:aray/app/data/model/model_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Workspace {

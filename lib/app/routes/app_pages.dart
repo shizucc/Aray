@@ -1,3 +1,5 @@
+import 'package:aray/app/modules/activity/bindings/bindings_activity.dart';
+import 'package:aray/app/modules/activity/views/activity_view.dart';
 import 'package:aray/app/modules/auth/bindings/bindings_login_page.dart';
 import 'package:aray/app/modules/auth/views/login_page.dart';
 import 'package:aray/app/modules/projects/bindings/bindings_project.dart';
@@ -24,6 +26,10 @@ class AppPages {
     GetPage(
         name: _Paths.WORKSPACE,
         page: () => const WorkspacePage(),
-        binding: WorkspaceBinding())
+        binding: WorkspaceBinding()),
+    GetPage(
+        name: _Paths.ACTIVITY,
+        page: () => const ActivityView(),
+        binding: ActivityBinding())
   ];
 }
