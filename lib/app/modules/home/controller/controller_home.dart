@@ -14,6 +14,9 @@ class HomeController extends GetxController {
       print("Berpindah Page");
 
       Stream<User?> authStatus = FirebaseAuth.instance.authStateChanges();
+      if(authStatus != null){
+        
+      }
     });
   }
 }
