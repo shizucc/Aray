@@ -67,8 +67,8 @@ class ProjectView extends StatelessWidget {
                                           Get.toNamed(Routes.ACTIVITY,
                                               arguments: {
                                                 "activity": activitySnapshot,
-                                                "activity_path":
-                                                    controller.activityPath
+                                                "activity_path": controller
+                                                    .activityPath.value
                                               });
                                         },
                                         title:

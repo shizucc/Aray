@@ -29,7 +29,7 @@ class ProjectController extends GetxController {
   // Stream Activity dengan parameter satu card
   Stream<QuerySnapshot<Activity>> streamActivities(
       QueryDocumentSnapshot<CardModel> cardSnapshot) async* {
-    print(cardPath.value);
+    // print(cardPath.value);
     final activityRef = FirebaseFirestore.instance
         .collection(cardPath.value)
         .doc(cardSnapshot.id)
