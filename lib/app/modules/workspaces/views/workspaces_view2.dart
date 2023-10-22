@@ -11,10 +11,24 @@ class WorkspaceView2 extends StatelessWidget {
         title: Text("Projects"),
       ),
       body: ListView(
-        children: const <Widget>[
+        children: <Widget>[
           ListTile(
             title: Text('Endour Studio'),
-            trailing: Icon(Icons.more_horiz),  
+            trailing: PopupMenuButton(
+              icon: Icon(Icons.more_horiz),
+              itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+              PopupMenuItem(
+                child: Text('Edit'),
+                value: 'Edit',
+              ),
+              PopupMenuItem(
+                child: Text('Delete'),
+                value: 'Delete',
+              ),
+            ],
+            onSelected: (dynamic value) {
+              print(value);
+            }),
           ),
           Card(
             color: Color.fromARGB(255, 255, 237, 237),
