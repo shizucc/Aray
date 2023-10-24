@@ -21,7 +21,8 @@ class ProjectView extends StatelessWidget {
     final Project project = projectSnapshot.data();
     return Scaffold(
       appBar: AppBar(
-        title: Text("Project"),
+        leading: Icon(Icons.menu),
+        // title: Text("Project"),
       ),
       body: Center(
         child: Column(

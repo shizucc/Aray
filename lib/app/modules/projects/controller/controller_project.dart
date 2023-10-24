@@ -7,7 +7,6 @@ import 'package:get/get.dart';
 class ProjectController extends GetxController {
   final RxString cardPath = ''.obs;
   final RxString activityPath = ''.obs;
-  // Mendapatkan Semua Cards
 
   // Stream semua card
   Stream<QuerySnapshot<CardModel>> streamCards(
@@ -29,7 +28,6 @@ class ProjectController extends GetxController {
   // Stream Activity dengan parameter satu card
   Stream<QuerySnapshot<Activity>> streamActivities(
       QueryDocumentSnapshot<CardModel> cardSnapshot) async* {
-    // print(cardPath.value);
     final activityRef = FirebaseFirestore.instance
         .collection(cardPath.value)
         .doc(cardSnapshot.id)
