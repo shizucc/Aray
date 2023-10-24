@@ -1,5 +1,6 @@
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
+import 'package:aray/app/modules/workspaces/controller/animation_controller_workspace.dart';
 import 'package:aray/app/modules/workspaces/controller/controller_workspace.dart';
 import 'package:aray/app/routes/app_pages.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,22 +13,22 @@ class WorkspacePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(WorkspaceController());
-    controller.fetchWorkspaces();
+    final c = Get.put(WorkspaceController());
+    c.fetchWorkspaces();
     return Scaffold(
       appBar: AppBar(
         leading: const Icon(Icons.menu),
         title: const Text("Projects"),
         actions: [
           IconButton(
-              onPressed: () => controller.logOutWithGoogle(),
+              onPressed: () => c.logOutWithGoogle(),
               icon: const Icon(Icons.power))
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 15),
         child: FutureBuilder<List<DocumentReference<Workspace>>>(
-          future: controller.fetchWorkspaces(),
+          future: c.fetchWorkspaces(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Container();
@@ -42,7 +43,7 @@ class WorkspacePage extends StatelessWidget {
                 children: workspaces.map((workspace) {
                   // Mendapatkan nama workspace (ini kode ngakalin)
                   return FutureBuilder<String>(
-                    future: controller.getWorkspaceName(workspace),
+                    future: c.getWorkspaceName(workspace),
                     builder: (context, nameSnapshot) {
                       if (nameSnapshot.connectionState ==
                           ConnectionState.waiting) {
@@ -51,7 +52,7 @@ class WorkspacePage extends StatelessWidget {
                         return Text("Error: ${nameSnapshot.error}");
                       } else {
                         final workspaceName = nameSnapshot.data;
-                        final projects = controller.fetchProjects(workspace);
+                        final projects = c.fetchProjects(workspace);
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -123,6 +124,20 @@ class WorkspacePage extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+class ExpansionWorkspaces extends StatelessWidget {
+  const ExpansionWorkspaces({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final a = Get.put(WorkspaceAnimationController());
+    return ExpansionPanelList(
+      children: [
+        // ExpansionPanel(
+        //     headerBuilder: headerBuilder, body: body, isExpanded: a.isOpen())
+      ],
     );
   }
 }
