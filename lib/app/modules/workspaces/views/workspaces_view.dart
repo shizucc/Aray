@@ -38,31 +38,35 @@ class WorkspacePage extends StatelessWidget {
               return const Text("Tidak ada data.");
             } else {
               final workspaces = snapshot.data!;
-              return WorkspaceExpansion(workspaces: workspaces, c: c);
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                child: WorskpaceList(workspaces: workspaces, c: c),
+              );
             }
           },
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        child: Icon(CupertinoIcons.add),
       ),
     );
   }
 }
 
-class WorkspaceExpansion extends StatelessWidget {
+class WorskpaceList extends StatelessWidget {
   final List<DocumentReference<Workspace>> workspaces;
   final WorkspaceController c;
-  const WorkspaceExpansion(
-      {super.key, required this.workspaces, required this.c});
+  const WorskpaceList({super.key, required this.workspaces, required this.c});
 
   @override
   Widget build(BuildContext context) {
     final a = Get.put(WorkspaceAnimationController());
     a.initIsOpen(workspaces.length);
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 25),
-      children: workspaces.asMap().entries.map((entry) {
-        // Mendapatkan nama workspace (ini kode ngakalin)
-        final int index = entry.key;
-        final workspace = entry.value;
+    return ListView.builder(
+      itemCount: workspaces.length,
+      itemBuilder: (context, index) {
+        final workspace = workspaces[index];
         return FutureBuilder(
             future: c.getWorkspaceName(workspace),
             builder: (context, nameSnapshot) {
@@ -100,7 +104,8 @@ class WorkspaceExpansion extends StatelessWidget {
                                     fontSize: 22, fontWeight: FontWeight.w500),
                               ),
                             ),
-                            const Icon(CupertinoIcons.ellipsis)
+                            const Icon(CupertinoIcons.ellipsis),
+                            const SizedBox(width: 15)
                           ],
                         ),
                         AnimatedContainer(
@@ -147,8 +152,18 @@ class WorkspaceExpansion extends StatelessWidget {
                     ));
               }
             });
-      }).toList(),
+      },
     );
+  }
+}
+
+class ProjectTiles extends StatelessWidget {
+  const ProjectTiles({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ReorderableListView(
+        children: [], onReorder: (oldIndex, newIndex) {});
   }
 }
 
@@ -173,7 +188,7 @@ class ProjectTile extends StatelessWidget {
             color: Colors.grey.withOpacity(0.3),
             borderRadius: BorderRadius.circular(15)),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-        margin: const EdgeInsets.symmetric(vertical: 7),
+        margin: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
         width: Get.width,
         child: Row(
           children: [
