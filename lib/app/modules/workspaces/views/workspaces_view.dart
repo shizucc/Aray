@@ -48,7 +48,7 @@ class WorkspacePage extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
-        child: Icon(CupertinoIcons.add),
+        child: const Icon(CupertinoIcons.add),
       ),
     );
   }
@@ -77,93 +77,81 @@ class WorskpaceList extends StatelessWidget {
               } else {
                 final workspaceName = nameSnapshot.data;
                 final projects = c.fetchProjects(workspace);
-                return Obx(() => Column(
-                      children: [
-                        Row(
-                          children: [
-                            IconButton(
-                                onPressed: () {
-                                  a.switchPanel(index, !a.isOpen(index));
-                                },
-                                icon: a.isOpen(index)
-                                    ? const Icon(
-                                        CupertinoIcons.chevron_up,
-                                        size: 25,
-                                      )
-                                    : const Icon(
-                                        CupertinoIcons.chevron_down,
-                                        size: 25,
-                                      )),
-                            const SizedBox(
-                              width: 10,
-                            ),
-                            Expanded(
-                              child: Text(
-                                workspaceName.toString(),
-                                style: const TextStyle(
-                                    fontSize: 22, fontWeight: FontWeight.w500),
-                              ),
-                            ),
-                            const Icon(CupertinoIcons.ellipsis),
-                            const SizedBox(width: 15)
-                          ],
-                        ),
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOut,
-                          child: a.isOpen(index) == true
-                              ? FutureBuilder<
-                                  List<QueryDocumentSnapshot<Project>>>(
-                                  future: projects,
-                                  builder: (context, projectSnapshot) {
-                                    if (projectSnapshot.connectionState ==
-                                        ConnectionState.waiting) {
-                                      return const CircularProgressIndicator();
-                                    } else if (projectSnapshot.hasError) {
-                                      return Text(
-                                          "Error: ${projectSnapshot.error}");
-                                    } else if (!projectSnapshot.hasData ||
-                                        projectSnapshot.data!.isEmpty) {
-                                      return const Text("Invalid Name");
-                                    } else {
-                                      final projectList = projectSnapshot.data!;
-                                      return Column(
-                                        children: projectList.map((project) {
-                                          return ProjectTile(
-                                              title: project.data().name,
-                                              image: project
-                                                  .data()
-                                                  .personalize['image'],
-                                              onTap: () {
-                                                Get.toNamed(Routes.PROJECT,
-                                                    arguments: {
-                                                      "workspace": workspace,
-                                                      "project": project
-                                                    });
-                                              });
-                                        }).toList(),
-                                      );
-                                    }
-                                  },
+                return FutureBuilder(
+                    future: projects,
+                    builder: ((context, projectSnapshot) {
+                      if (projectSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const CircularProgressIndicator();
+                      } else if (projectSnapshot.hasError) {
+                        return Text("Error: ${projectSnapshot.error}");
+                      } else if (!projectSnapshot.hasData ||
+                          projectSnapshot.data!.isEmpty) {
+                        return const Text("Invalid Name");
+                      } else {
+                        final projectList = projectSnapshot.data;
+                        return Obx(() => Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    IconButton(
+                                        onPressed: () {
+                                          a.switchPanel(
+                                              index, !a.isOpen(index));
+                                        },
+                                        icon: a.isOpen(index)
+                                            ? const Icon(
+                                                CupertinoIcons.chevron_up,
+                                                size: 25,
+                                              )
+                                            : const Icon(
+                                                CupertinoIcons.chevron_down,
+                                                size: 25,
+                                              )),
+                                    const SizedBox(
+                                      width: 10,
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        workspaceName.toString(),
+                                        style: const TextStyle(
+                                            fontSize: 22,
+                                            fontWeight: FontWeight.w500),
+                                      ),
+                                    ),
+                                    const Icon(CupertinoIcons.ellipsis),
+                                    const SizedBox(width: 15)
+                                  ],
+                                ),
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  child: a.isOpen(index) == true
+                                      ? Column(
+                                          children: projectList!.map((project) {
+                                            return ProjectTile(
+                                                title: project.data().name,
+                                                image: project
+                                                    .data()
+                                                    .personalize['image'],
+                                                onTap: () {
+                                                  Get.toNamed(Routes.PROJECT,
+                                                      arguments: {
+                                                        "workspace": workspace,
+                                                        "project": project
+                                                      });
+                                                });
+                                          }).toList(),
+                                        )
+                                      : null,
                                 )
-                              : null,
-                        )
-                      ],
-                    ));
+                              ],
+                            ));
+                      }
+                    }));
               }
             });
       },
     );
-  }
-}
-
-class ProjectTiles extends StatelessWidget {
-  const ProjectTiles({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ReorderableListView(
-        children: [], onReorder: (oldIndex, newIndex) {});
   }
 }
 
