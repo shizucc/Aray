@@ -8,6 +8,8 @@ class ProjectController extends GetxController {
   final RxString cardPath = ''.obs;
   final RxString activityPath = ''.obs;
 
+  Map<String, String> activitiesPath = {};
+
   // Stream semua card
   Stream<QuerySnapshot<CardModel>> streamCards(
       QueryDocumentSnapshot projectSnapshot,
@@ -20,7 +22,8 @@ class ProjectController extends GetxController {
             fromFirestore: (snapshot, _) =>
                 CardModel.fromJson(snapshot.data()!),
             toFirestore: (CardModel card, _) => card.toJson());
-    final Stream<QuerySnapshot<CardModel>> listCard = cardRef.snapshots();
+    final Stream<QuerySnapshot<CardModel>> listCard =
+        cardRef.orderBy('order').snapshots();
     cardPath.value = cardRef.path;
     yield* listCard;
   }
@@ -36,8 +39,24 @@ class ProjectController extends GetxController {
             fromFirestore: (snapshot, _) => Activity.fromJson(snapshot.data()!),
             toFirestore: (Activity activity, _) => activity.toJson());
     final Stream<QuerySnapshot<Activity>> listActivity =
-        activityRef.snapshots();
+        activityRef.orderBy('order').snapshots();
     activityPath.value = activityRef.path;
+    // Menambah ke activitiesPath
     yield* listActivity;
+  }
+
+  // Reorder Activity
+  void reorderActivity(
+      QueryDocumentSnapshot<Activity> activitySnapshot,
+      QueryDocumentSnapshot<CardModel> cardSnapshot,
+      int oldIndex,
+      int newIndex) {
+    print(cardPath);
+    print(activitySnapshot.id);
+    print(cardSnapshot.id);
+    print(oldIndex);
+    print(newIndex);
+
+    // Logika untuk Reorder
   }
 }

@@ -14,7 +14,7 @@ class ProjectView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(ProjectController());
+    final c = Get.put(ProjectController());
     final QueryDocumentSnapshot<Project> projectSnapshot =
         Get.arguments['project'];
     final DocumentReference<Workspace> workspaceRef =
@@ -33,7 +33,7 @@ class ProjectView extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: StreamBuilder<QuerySnapshot<CardModel>>(
-          stream: controller.streamCards(projectSnapshot, workspaceRef),
+          stream: c.streamCards(projectSnapshot, workspaceRef),
           builder: (context, snapshot) {
             if (snapshot.hasError) {
               return Text(snapshot.error.toString());
@@ -91,7 +91,7 @@ class ProjectView extends StatelessWidget {
                                     bottomLeft: Radius.circular(10),
                                     bottomRight: Radius.circular(10))),
                             child: StreamBuilder<QuerySnapshot<Activity>>(
-                              stream: controller.streamActivities(cardSnapshot),
+                              stream: c.streamActivities(cardSnapshot),
                               builder: (context, snapshot) {
                                 if (snapshot.hasError) {
                                   return const Text('Something went wrong');
@@ -110,7 +110,16 @@ class ProjectView extends StatelessWidget {
                                         ),
                                         height: snapshot.data!.docs.length * 75,
                                         child: ReorderableListView(
-                                          onReorder: (oldIndex, newIndex) {},
+                                          onReorder: (oldIndex, newIndex) {
+                                            final QueryDocumentSnapshot<
+                                                    Activity> activitySnapshot =
+                                                snapshot.data!.docs[oldIndex];
+                                            c.reorderActivity(
+                                                activitySnapshot,
+                                                cardSnapshot,
+                                                oldIndex,
+                                                newIndex);
+                                          },
                                           children: snapshot.data!.docs
                                               .map((activitySnapshot) {
                                             final Activity activity =
@@ -137,10 +146,9 @@ class ProjectView extends StatelessWidget {
                                                         arguments: {
                                                           "activity":
                                                               activitySnapshot,
-                                                          "activity_path":
-                                                              controller
-                                                                  .activityPath
-                                                                  .value
+                                                          "activity_path": c
+                                                              .activityPath
+                                                              .value
                                                         });
                                                   },
                                                   child: Row(
