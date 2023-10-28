@@ -41,16 +41,29 @@ class ProjectController extends GetxController {
     final Stream<QuerySnapshot<Activity>> listActivity =
         activityRef.orderBy('order').snapshots();
     activityPath.value = activityRef.path;
-    // Menambah ke activitiesPath
     yield* listActivity;
   }
 
   // Reorder Activity
-  void reorderActivity(
+  Future<void> reorderActivity(
       QueryDocumentSnapshot<Activity> activitySnapshot,
       QueryDocumentSnapshot<CardModel> cardSnapshot,
       int oldIndex,
-      int newIndex) {
+      int newIndex) async {
+    final activityRef = FirebaseFirestore.instance
+        .collection(cardPath.value)
+        .doc(cardSnapshot.id)
+        .collection('activity')
+        .withConverter(
+            fromFirestore: (snapshot, _) => Activity.fromJson(snapshot.data()!),
+            toFirestore: (Activity activity, _) => activity.toJson());
+
+    final QuerySnapshot<Activity> activitiesSnapshot = await activityRef.get();
+    for (var activity in activitiesSnapshot.docs) {
+      // Logika untuk loop setiap aktivitas
+      // activityRef.doc(activitySnapshot.id).update();
+    }
+
     print(cardPath);
     print(activitySnapshot.id);
     print(cardSnapshot.id);
