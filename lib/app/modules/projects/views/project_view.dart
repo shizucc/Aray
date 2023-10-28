@@ -20,11 +20,14 @@ class ProjectView extends StatelessWidget {
     final DocumentReference<Workspace> workspaceRef =
         Get.arguments['workspace'];
     final Project project = projectSnapshot.data();
+
+    final Color cardColor = const Color.fromRGBO(241, 239, 239, 1);
     return Scaffold(
       appBar: AppBar(
         title: Text(project.name),
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(CupertinoIcons.ellipsis))
+          IconButton(
+              onPressed: () {}, icon: const Icon(CupertinoIcons.ellipsis))
         ],
       ),
       body: Padding(
@@ -39,74 +42,165 @@ class ProjectView extends StatelessWidget {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const CircularProgressIndicator();
             }
-            return ReorderableListView(
-              scrollDirection: Axis.horizontal,
-              onReorder: (oldIndex, newIndex) {},
-              children: snapshot.data!.docs.map((cardSnapshot) {
-                final CardModel card = cardSnapshot.data();
-                return Container(
-                  key: ValueKey(cardSnapshot),
-                  margin: const EdgeInsets.symmetric(horizontal: 15),
-                  width: Get.width * (0.8),
-                  decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(15)),
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                card.name,
-                                style: const TextStyle(fontSize: 18),
-                              ),
+            return SizedBox(
+              height: Get.height * 0.8,
+              child: ReorderableListView(
+                scrollDirection: Axis.horizontal,
+                onReorder: (oldIndex, newIndex) {},
+                children: snapshot.data!.docs.map((cardSnapshot) {
+                  final CardModel card = cardSnapshot.data();
+                  return Container(
+                    key: ValueKey(cardSnapshot),
+                    margin: const EdgeInsets.only(right: 15, left: 15),
+                    width: Get.width * (0.85),
+                    decoration: BoxDecoration(
+                        // color: Colors.black.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(15)),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 0, vertical: 0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.only(
+                                left: 20, right: 20, top: 5),
+                            decoration: BoxDecoration(
+                                color: cardColor,
+                                borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(10),
+                                    topRight: Radius.circular(10))),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    card.name,
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                ),
+                                IconButton(
+                                    onPressed: () {},
+                                    icon: const Icon(CupertinoIcons.ellipsis))
+                              ],
                             ),
-                            IconButton(
-                                onPressed: () {},
-                                icon: const Icon(CupertinoIcons.ellipsis))
-                          ],
-                        ),
-                        StreamBuilder<QuerySnapshot<Activity>>(
-                          stream: controller.streamActivities(cardSnapshot),
-                          builder: (context, snapshot) {
-                            if (snapshot.hasError) {
-                              return const Text('Something went wrong');
-                            }
-                            if (snapshot.connectionState ==
-                                ConnectionState.waiting) {
-                              return const CircularProgressIndicator();
-                            }
-                            return SizedBox(
-                              height: 200,
-                              child: ReorderableListView(
-                                onReorder: (oldIndex, newIndex) {},
-                                children:
-                                    snapshot.data!.docs.map((activitySnapshot) {
-                                  return ListTile(
-                                    key: ValueKey(activitySnapshot),
-                                    onTap: () {
-                                      Get.toNamed(Routes.ACTIVITY, arguments: {
-                                        "activity": activitySnapshot,
-                                        "activity_path":
-                                            controller.activityPath.value
-                                      });
-                                    },
-                                    title: Text(activitySnapshot.data().name),
-                                  );
-                                }).toList(),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
+                          ),
+                          Container(
+                            decoration: BoxDecoration(
+                                color: cardColor,
+                                borderRadius: const BorderRadius.only(
+                                    bottomLeft: Radius.circular(10),
+                                    bottomRight: Radius.circular(10))),
+                            child: StreamBuilder<QuerySnapshot<Activity>>(
+                              stream: controller.streamActivities(cardSnapshot),
+                              builder: (context, snapshot) {
+                                if (snapshot.hasError) {
+                                  return const Text('Something went wrong');
+                                }
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
+                                  return const CircularProgressIndicator();
+                                }
+                                return Column(
+                                  children: [
+                                    SizedBox(
+                                        height: snapshot.data!.docs.length * 75,
+                                        child: ReorderableListView.builder(
+                                          itemCount: snapshot.data!.docs.length,
+                                          onReorder: (oldIndex, newIndex) {},
+                                          itemBuilder: (context, index) {
+                                            final activitySnapshot =
+                                                snapshot.data!.docs;
+                                            final Activity activity =
+                                                activitySnapshot[index].data();
+                                            return Container(
+                                              margin: const EdgeInsets.only(
+                                                  top: 5,
+                                                  bottom: 10,
+                                                  right: 25,
+                                                  left: 25),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 15,
+                                                      horizontal: 15),
+                                              key: ValueKey(activity),
+                                              decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          10)),
+                                              child: Row(
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      activity.name,
+                                                      style: const TextStyle(
+                                                          fontSize: 14),
+                                                    ),
+                                                  ),
+                                                  const Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.attach_file,
+                                                        size: 14,
+                                                      ),
+                                                      SizedBox(
+                                                        width: 5,
+                                                      ),
+                                                      Text("2")
+                                                    ],
+                                                  ),
+                                                  const SizedBox(
+                                                    width: 5,
+                                                  ),
+                                                  const Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.task_outlined,
+                                                        size: 14,
+                                                      ),
+                                                      SizedBox(
+                                                        width: 5,
+                                                      ),
+                                                      Text("1/2")
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        )),
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 25),
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                          color:
+                                              Colors.black.withOpacity(0.05)),
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(CupertinoIcons.add),
+                                          SizedBox(
+                                            width: 5,
+                                          ),
+                                          Text("Add Activity"),
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  );
+                }).toList(),
+              ),
             );
           },
         ),
