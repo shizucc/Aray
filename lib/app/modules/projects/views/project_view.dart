@@ -21,7 +21,7 @@ class ProjectView extends StatelessWidget {
         Get.arguments['workspace'];
     final Project project = projectSnapshot.data();
 
-    final Color cardColor = const Color.fromRGBO(241, 239, 239, 1);
+    const Color cardColor = Color.fromRGBO(241, 239, 239, 1);
     return Scaffold(
       appBar: AppBar(
         title: Text(project.name),
@@ -65,9 +65,9 @@ class ProjectView extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.only(
                                 left: 20, right: 20, top: 5),
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                                 color: cardColor,
-                                borderRadius: const BorderRadius.only(
+                                borderRadius: BorderRadius.only(
                                     topLeft: Radius.circular(10),
                                     topRight: Radius.circular(10))),
                             child: Row(
@@ -85,9 +85,9 @@ class ProjectView extends StatelessWidget {
                             ),
                           ),
                           Container(
-                            decoration: BoxDecoration(
+                            decoration: const BoxDecoration(
                                 color: cardColor,
-                                borderRadius: const BorderRadius.only(
+                                borderRadius: BorderRadius.only(
                                     bottomLeft: Radius.circular(10),
                                     bottomRight: Radius.circular(10))),
                             child: StreamBuilder<QuerySnapshot<Activity>>(
@@ -102,72 +102,90 @@ class ProjectView extends StatelessWidget {
                                 }
                                 return Column(
                                   children: [
-                                    SizedBox(
+                                    Container(
+                                        margin: const EdgeInsets.only(
+                                          top: 5,
+                                          right: 25,
+                                          left: 25,
+                                        ),
                                         height: snapshot.data!.docs.length * 75,
-                                        child: ReorderableListView.builder(
-                                          itemCount: snapshot.data!.docs.length,
+                                        child: ReorderableListView(
                                           onReorder: (oldIndex, newIndex) {},
-                                          itemBuilder: (context, index) {
-                                            final activitySnapshot =
-                                                snapshot.data!.docs;
+                                          children: snapshot.data!.docs
+                                              .map((activitySnapshot) {
                                             final Activity activity =
-                                                activitySnapshot[index].data();
-                                            return Container(
-                                              margin: const EdgeInsets.only(
-                                                  top: 5,
-                                                  bottom: 10,
-                                                  right: 25,
-                                                  left: 25),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      vertical: 15,
-                                                      horizontal: 15),
+                                                activitySnapshot.data();
+                                            return Draggable(
+                                              feedback: const Placeholder(),
                                               key: ValueKey(activity),
-                                              decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          10)),
-                                              child: Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: Text(
-                                                      activity.name,
-                                                      style: const TextStyle(
-                                                          fontSize: 14),
-                                                    ),
-                                                  ),
-                                                  const Row(
+                                              child: Container(
+                                                margin:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 5),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 15,
+                                                        horizontal: 15),
+                                                decoration: BoxDecoration(
+                                                    color: Colors.white,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10)),
+                                                child: InkWell(
+                                                  onTap: () {
+                                                    Get.toNamed(Routes.ACTIVITY,
+                                                        arguments: {
+                                                          "activity":
+                                                              activitySnapshot,
+                                                          "activity_path":
+                                                              controller
+                                                                  .activityPath
+                                                                  .value
+                                                        });
+                                                  },
+                                                  child: Row(
                                                     children: [
-                                                      Icon(
-                                                        Icons.attach_file,
-                                                        size: 14,
+                                                      Expanded(
+                                                        child: Text(
+                                                          activity.name,
+                                                          style:
+                                                              const TextStyle(
+                                                                  fontSize: 14),
+                                                        ),
                                                       ),
-                                                      SizedBox(
+                                                      const Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.attach_file,
+                                                            size: 14,
+                                                          ),
+                                                          SizedBox(
+                                                            width: 5,
+                                                          ),
+                                                          Text("2")
+                                                        ],
+                                                      ),
+                                                      const SizedBox(
                                                         width: 5,
                                                       ),
-                                                      Text("2")
+                                                      const Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.task_outlined,
+                                                            size: 14,
+                                                          ),
+                                                          SizedBox(
+                                                            width: 5,
+                                                          ),
+                                                          Text("1/2")
+                                                        ],
+                                                      ),
                                                     ],
                                                   ),
-                                                  const SizedBox(
-                                                    width: 5,
-                                                  ),
-                                                  const Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.task_outlined,
-                                                        size: 14,
-                                                      ),
-                                                      SizedBox(
-                                                        width: 5,
-                                                      ),
-                                                      Text("1/2")
-                                                    ],
-                                                  ),
-                                                ],
+                                                ),
                                               ),
                                             );
-                                          },
+                                          }).toList(),
                                         )),
                                     Container(
                                       margin: const EdgeInsets.only(bottom: 25),
