@@ -50,6 +50,8 @@ class ProjectController extends GetxController {
       QueryDocumentSnapshot<CardModel> cardSnapshot,
       int oldIndex,
       int newIndex) async {
+    print(oldIndex);
+    print(newIndex);
     final activityRef = FirebaseFirestore.instance
         .collection(cardPath.value)
         .doc(cardSnapshot.id)
@@ -57,18 +59,27 @@ class ProjectController extends GetxController {
         .withConverter(
             fromFirestore: (snapshot, _) => Activity.fromJson(snapshot.data()!),
             toFirestore: (Activity activity, _) => activity.toJson());
-
+    // Normalisasi index
+    // int indexDumo = newIndex == 2 ?
     final QuerySnapshot<Activity> activitiesSnapshot = await activityRef.get();
+    activityRef.doc(activitySnapshot.id).update({'order': newIndex});
     for (var activity in activitiesSnapshot.docs) {
-      // Logika untuk loop setiap aktivitas
-      // activityRef.doc(activitySnapshot.id).update();
+      late int i;
+      newIndex == 2 ? i = 2 : i = 1;
+
+      final activityData = activity.data();
+      if (activityData.order != newIndex) {
+        // Update Activity order
+        activityRef.doc(activity.id).update({'order': i});
+        i += 1;
+      }
     }
 
-    print(cardPath);
-    print(activitySnapshot.id);
-    print(cardSnapshot.id);
-    print(oldIndex);
-    print(newIndex);
+    // print(cardPath);
+    // print(activitySnapshot.id);
+    // print(cardSnapshot.id);
+    // print(oldIndex);
+    // print(newIndex);
 
     // Logika untuk Reorder
   }
