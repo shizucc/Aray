@@ -60,12 +60,22 @@ class ProjectController extends GetxController {
 
     final QuerySnapshot<Activity> activitiesSnapshot =
         await activityRef.orderBy('order').get();
-    if (oldIndex < newIndex) {
-      newIndex -= 1;
-    }
-    // print("old : $oldIndex, new index : $newIndex");
 
-    final activityCurrent = activityRef.doc(activitySnapshot.id);
-    activityCurrent.update({'order': newIndex});
+    final documents = activitiesSnapshot.docs;
+    if (oldIndex < newIndex) {
+      for (int i = oldIndex; i < newIndex && i < documents.length - 1; i++) {
+        final previousItem = documents[i];
+        final item = documents[i + 1];
+        activityRef.doc(item.id).update({'order': i});
+        activityRef.doc(previousItem.id).update({'order': i + 1});
+      }
+    } else {
+      for (int i = oldIndex; i > newIndex; i--) {
+        final previousItem = documents[i];
+        final item = documents[i - 1];
+        activityRef.doc(item.id).update({'order': i});
+        activityRef.doc(previousItem.id).update({'order': i - 1});
+      }
+    }
   }
 }
