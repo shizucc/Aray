@@ -12,12 +12,11 @@ class ProjectDetail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Get.put(ProjectDetailController());
-    final QueryDocumentSnapshot<Project> projectSnapshot =
-        Get.arguments['projectSnapshot'];
-    final DocumentReference<Workspace> workspaceRef =
-        Get.arguments['workspaceRef'];
+    final projectId = Get.arguments['projectId'];
+    final workspaceId = Get.arguments['workspaceId'];
+    print(workspaceId);
+    print(projectId);
 
-    final Project project = projectSnapshot.data();
     TextStyle titleTextStyle = TextStyle(
         fontWeight: FontWeight.w300,
         fontSize: 13,
@@ -26,54 +25,94 @@ class ProjectDetail extends StatelessWidget {
       appBar: AppBar(
         actions: [
           IconButton(
-              onPressed: () {}, icon: Icon(CupertinoIcons.ellipsis_vertical))
+              onPressed: () {},
+              icon: const Icon(CupertinoIcons.ellipsis_vertical))
         ],
       ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 45),
-          child: ListView(
-            children: [
-              Text(
-                "Project Name",
-                style: titleTextStyle,
-              ),
-              SizedBox(
-                height: 5,
-              ),
-              Text(
-                project.name,
-                style: TextStyle(fontSize: 26, fontWeight: FontWeight.w600),
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              Text(
-                "Workspace",
-                style: titleTextStyle,
-              ),
-              SizedBox(
-                height: 5,
-              ),
-              Text(
-                "Endour Studio",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              Text(
-                "Project Description",
-                style: titleTextStyle,
-              ),
-              SizedBox(
-                height: 5,
-              ),
-              Text(
-                project.description,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-              ),
-            ],
+          child: StreamBuilder<DocumentSnapshot<Project>>(
+            stream: c.streamProject(workspaceId, projectId),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const Text('Something went wrong');
+              }
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              }
+              final projectSnapshot = snapshot.data;
+              final Project? project = projectSnapshot!.data();
+
+              return ListView(
+                children: [
+                  Text(
+                    "Project Name",
+                    style: titleTextStyle,
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Text(
+                    project!.name,
+                    style: const TextStyle(
+                        fontSize: 26, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Text(
+                    "Workspace",
+                    style: titleTextStyle,
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  const Text(
+                    "Endour Studio",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Text(
+                    "Project Description",
+                    style: titleTextStyle,
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  Text(
+                    project.description,
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Text(
+                    "Personalize",
+                    style: titleTextStyle,
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  // ToggleButtons(children: [], isSelected: isSelected),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Text(
+                    "Created At",
+                    style: titleTextStyle,
+                  ),
+                  Text(
+                    c.dateFormating(project.createdAt),
+                    style: const TextStyle(
+                        fontSize: 15, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
