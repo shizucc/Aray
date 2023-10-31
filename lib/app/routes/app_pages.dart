@@ -3,6 +3,8 @@ import 'package:aray/app/modules/activity/views/activity_view.dart';
 import 'package:aray/app/modules/auth/bindings/bindings_login_page.dart';
 import 'package:aray/app/modules/auth/views/login_page.dart';
 import 'package:aray/app/modules/projects/bindings/bindings_project.dart';
+import 'package:aray/app/modules/projects/bindings/bindings_project_detail.dart';
+import 'package:aray/app/modules/projects/views/project_detail.dart';
 import 'package:aray/app/modules/projects/views/project_view.dart';
 import 'package:aray/app/modules/workspaces/bindings/bindings_workspace.dart';
 import 'package:aray/app/modules/workspaces/views/workspaces_view.dart';
@@ -30,6 +32,10 @@ class AppPages {
     GetPage(
         name: _Paths.ACTIVITY,
         page: () => const ActivityView(),
-        binding: ActivityBinding())
+        binding: ActivityBinding()),
+    GetPage(
+        name: _Paths.PROJECTDETAIL,
+        page: () => const ProjectDetail(),
+        binding: ProjectDetailBinding())
   ];
 }

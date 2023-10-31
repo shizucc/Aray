@@ -7,6 +7,7 @@ abstract class Routes {
   static const WORKSPACE = _Paths.WORKSPACE;
   static const PROJECT = _Paths.PROJECT;
   static const ACTIVITY = _Paths.ACTIVITY;
+  static const PROJECTDETAIL = _Paths.PROJECTDETAIL;
 }
 
 abstract class _Paths {
@@ -14,5 +15,6 @@ abstract class _Paths {
   static const LOGINPAGE = "/loginPage";
   static const WORKSPACE = "/workspace";
   static const PROJECT = "/project";
+  static const PROJECTDETAIL = "/project/detail";
   static const ACTIVITY = "/activity";
 }

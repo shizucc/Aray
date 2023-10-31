@@ -27,7 +27,13 @@ class ProjectView extends StatelessWidget {
         title: Text(project.name),
         actions: [
           IconButton(
-              onPressed: () {}, icon: const Icon(CupertinoIcons.ellipsis))
+              onPressed: () {
+                Get.toNamed(Routes.PROJECTDETAIL, arguments: {
+                  'projectSnapshot': projectSnapshot,
+                  'workspaceRef': workspaceRef
+                });
+              },
+              icon: const Icon(CupertinoIcons.ellipsis))
         ],
       ),
       body: Padding(
