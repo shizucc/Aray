@@ -1,6 +1,8 @@
+import 'package:aray/app/data/model/model_color_theme.dart';
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:aray/app/modules/projects/controller/controller_project_detail.dart';
+import 'package:aray/utils/date_formating.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -14,13 +16,7 @@ class ProjectDetail extends StatelessWidget {
     final c = Get.put(ProjectDetailController());
     final projectId = Get.arguments['projectId'];
     final workspaceId = Get.arguments['workspaceId'];
-    print(workspaceId);
-    print(projectId);
 
-    TextStyle titleTextStyle = TextStyle(
-        fontWeight: FontWeight.w300,
-        fontSize: 13,
-        color: Colors.black.withOpacity(1));
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -44,15 +40,12 @@ class ProjectDetail extends StatelessWidget {
               final projectSnapshot = snapshot.data;
               final Project? project = projectSnapshot!.data();
 
+              final ColorTheme colorTheme =
+                  ColorTheme(code: project?.personalize['color']);
+
               return ListView(
                 children: [
-                  Text(
-                    "Project Name",
-                    style: titleTextStyle,
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
+                  titleOfDetail("Project Name", CupertinoIcons.doc),
                   Text(
                     project!.name,
                     style: const TextStyle(
@@ -61,24 +54,17 @@ class ProjectDetail extends StatelessWidget {
                   const SizedBox(
                     height: 20,
                   ),
-                  Text(
-                    "Workspace",
-                    style: titleTextStyle,
-                  ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  const Text(
-                    "Endour Studio",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                  ),
+                  titleOfDetail("Workspace", CupertinoIcons.square_grid_2x2),
+                  Obx(() => Text(
+                        c.workspace.value.name!,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w500),
+                      )),
                   const SizedBox(
                     height: 20,
                   ),
-                  Text(
-                    "Project Description",
-                    style: titleTextStyle,
-                  ),
+                  titleOfDetail(
+                      "Project Description", CupertinoIcons.doc_plaintext),
                   const SizedBox(
                     height: 5,
                   ),
@@ -90,23 +76,44 @@ class ProjectDetail extends StatelessWidget {
                   const SizedBox(
                     height: 20,
                   ),
-                  Text(
-                    "Personalize",
-                    style: titleTextStyle,
+                  titleOfDetail("Personalize", CupertinoIcons.paintbrush),
+                  Container(
+                    alignment: Alignment.center,
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
+                    margin: const EdgeInsets.symmetric(horizontal: 15),
+                    decoration: BoxDecoration(
+                        color: Color(colorTheme.baseColor!),
+                        borderRadius: BorderRadius.circular(20)),
+                    child: Row(
+                      children: [
+                        Expanded(
+                            child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              color: Color(colorTheme.primaryColor!)),
+                          child: const Center(
+                              child: Text(
+                            "Use Default Theme",
+                            style: TextStyle(fontSize: 12),
+                          )),
+                        )),
+                        const Expanded(
+                            child: Center(
+                                child: Text(
+                          "Add Cover Image",
+                          style: TextStyle(fontSize: 12),
+                        )))
+                      ],
+                    ),
                   ),
-                  const SizedBox(
-                    height: 5,
-                  ),
-                  // ToggleButtons(children: [], isSelected: isSelected),
                   const SizedBox(
                     height: 20,
                   ),
+                  titleOfDetail("Created at", CupertinoIcons.calendar),
                   Text(
-                    "Created At",
-                    style: titleTextStyle,
-                  ),
-                  Text(
-                    c.dateFormating(project.createdAt),
+                    DateFormating.createdAtFormat(project.createdAt),
                     style: const TextStyle(
                         fontSize: 15, fontWeight: FontWeight.w500),
                   ),
@@ -115,6 +122,31 @@ class ProjectDetail extends StatelessWidget {
             },
           ),
         ),
+      ),
+    );
+  }
+
+  Widget titleOfDetail(String label, IconData iconData) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 5),
+      child: Row(
+        children: [
+          Icon(
+            iconData,
+            size: 10,
+          ),
+          const SizedBox(
+            width: 5,
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontWeight: FontWeight.w300,
+              fontSize: 13,
+              color: Colors.black.withOpacity(1),
+            ),
+          )
+        ],
       ),
     );
   }

@@ -1,12 +1,11 @@
 import 'package:aray/app/data/model/model_project.dart';
+import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
 class ProjectDetailController extends GetxController {
-  final _obj = ''.obs;
-  set obj(value) => this._obj.value = value;
-  get obj => this._obj.value;
+  final workspace = Workspace(name: '').obs;
 
   String dateFormating(DateTime dateTime) {
     DateFormat dateFormat = DateFormat('dd MMMM yyyy', 'en_US');
@@ -18,9 +17,19 @@ class ProjectDetailController extends GetxController {
 
   Stream<DocumentSnapshot<Project>> streamProject(
       String workspaceId, String projectId) async* {
-    final projectRef = FirebaseFirestore.instance
+    final workspaceRef = FirebaseFirestore.instance
         .collection('workspace')
         .doc(workspaceId)
+        .withConverter(
+            fromFirestore: (snapshot, _) =>
+                Workspace.fromJson(snapshot.data()!),
+            toFirestore: (Workspace workspace, _) => workspace.toJson());
+
+    // set Workspace
+    final workspace = await workspaceRef.get();
+    this.workspace.value = workspace.data()!;
+
+    final projectRef = workspaceRef
         .collection('project')
         .doc(projectId)
         .withConverter(

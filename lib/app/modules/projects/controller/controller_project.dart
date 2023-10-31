@@ -10,6 +10,8 @@ class ProjectController extends GetxController {
 
   Map<String, String> activitiesPath = {};
 
+  // Stream 1 project
+  Stream<dynamic> streamProject(String projectId) async* {}
   // Stream semua card
   Stream<QuerySnapshot<CardModel>> streamCards(
       QueryDocumentSnapshot projectSnapshot,
