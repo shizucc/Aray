@@ -2,7 +2,7 @@ import 'package:aray/app/data/model/model_color_theme.dart';
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:aray/app/modules/projects/controller/controller_project_detail.dart';
-import 'package:aray/utils/date_formating.dart';
+import 'package:aray/utils/date_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -46,9 +46,8 @@ class ProjectDetail extends StatelessWidget {
 
               return GestureDetector(
                 onTap: () {
-                  a.isProjectDescriptionEditing(false);
-                  a.isProjectNameEditing(false);
                   FocusScope.of(context).unfocus();
+                  a.isProjectNameEditing(false);
                 },
                 child: ListView(
                   children: [
@@ -112,7 +111,7 @@ class ProjectDetail extends StatelessWidget {
                     ),
                     titleOfDetail("Created at", CupertinoIcons.calendar),
                     Text(
-                      DateFormating.createdAtFormat(project!.createdAt),
+                      DateHandler.createdAtFormat(project!.createdAt),
                       style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w500),
                     ),
@@ -120,9 +119,9 @@ class ProjectDetail extends StatelessWidget {
                       height: 20,
                     ),
                     titleOfDetail(
-                        "Last Updated at", CupertinoIcons.calendar_today),
+                        "Last Modified", CupertinoIcons.calendar_today),
                     Text(
-                      DateFormating.createdAtFormat(project.updatedAt),
+                      DateHandler.createdAtFormat(project.updatedAt),
                       style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w500),
                     ),
@@ -140,17 +139,33 @@ class ProjectDetail extends StatelessWidget {
       ProjectDetailController c, Project project) {
     return Container(
       child: a.isProjectNameEditing.value
-          ? TextField(
-              autofocus: true,
-              maxLength: 30,
-              controller: a.projectNameController,
-              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600),
-              onEditingComplete: () {
-                if (project.name != a.projectNameController.text) {
-                  c.updateProjectFromTextField('name', a.projectNameController);
-                }
-                a.switchIsProjectNameEditing(false);
-              },
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  autofocus: true,
+                  maxLength: 30,
+                  controller: a.projectNameController,
+                  style: const TextStyle(
+                      fontSize: 26, fontWeight: FontWeight.w600),
+                  onEditingComplete: () {
+                    if (a.projectNameController.text.isEmpty) {
+                      a.showProjectNameError();
+                      return;
+                    } else if (project.name != a.projectNameController.text) {
+                      c.updateProjectFromTextField(
+                          'name', a.projectNameController);
+                    }
+                    a.switchIsProjectNameEditing(false);
+                  },
+                ),
+                Obx(() => a.isShowProjectNameError.value
+                    ? const Text(
+                        "*Project Name can't be empty!",
+                        style: TextStyle(color: Colors.red, fontSize: 12),
+                      )
+                    : Container())
+              ],
             )
           : GestureDetector(
               onTap: () {
@@ -207,7 +222,7 @@ class ProjectDetail extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(
-                        width: 10,
+                        width: 25,
                       ),
                       InkWell(
                         onTap: () {
@@ -231,11 +246,19 @@ class ProjectDetail extends StatelessWidget {
                     a.projectDescriptionController, project.description);
                 a.switchIsProjectDescriptionEditing(true);
               },
-              child: Text(
-                project.description,
-                style:
-                    const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-              ),
+              child: project.description.isEmpty
+                  ? Text(
+                      'Add Project Description',
+                      style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black.withOpacity(0.3)),
+                    )
+                  : Text(
+                      project.description,
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w500),
+                    ),
             ),
     );
   }

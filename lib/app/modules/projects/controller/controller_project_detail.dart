@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class ProjectDetailAnimationController extends GetxController {
+  final isShowProjectNameError = false.obs;
   final isProjectNameEditing = false.obs;
   final isProjectDescriptionEditing = false.obs;
 
@@ -19,6 +20,14 @@ class ProjectDetailAnimationController extends GetxController {
     isProjectDescriptionEditing.value = value;
   }
 
+  void showProjectNameError() async {
+    isShowProjectNameError.value = true;
+
+    Future.delayed(const Duration(seconds: 5), () {
+      isShowProjectNameError.value = false;
+    });
+  }
+
   void setDefaultValueTextField(
       TextEditingController textEditingController, String value) {
     textEditingController.text = value;
@@ -29,6 +38,15 @@ class ProjectDetailController extends GetxController {
   final workspace = Workspace(name: '').obs;
   final workspaceId = ''.obs;
   final projectId = ''.obs;
+
+  Future<void> refreshProjectUpdatedAt() async {
+    FirebaseFirestore.instance
+        .collection('workspace')
+        .doc(workspaceId.value)
+        .collection('project')
+        .doc(projectId.value)
+        .update({'updated_at': Timestamp.fromDate(DateTime.now())});
+  }
 
   Stream<DocumentSnapshot<Project>> streamProject(
       String workspaceId, String projectId) async* {
@@ -73,7 +91,7 @@ class ProjectDetailController extends GetxController {
         .collection('project')
         .doc(projectId.value)
         .update({fields[field].toString(): value}).then((value) {
-      print('berhasil');
+      refreshProjectUpdatedAt();
     });
   }
 }

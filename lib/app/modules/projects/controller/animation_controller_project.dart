@@ -5,7 +5,6 @@ import 'package:get/get.dart';
 class ProjectAnimationController extends GetxController {
   Stream<DocumentSnapshot<Project>> streamProject(
       String workspaceId, String projectId) async* {
-    print('hehe');
     final projectRef = FirebaseFirestore.instance
         .collection('workspace')
         .doc(workspaceId)

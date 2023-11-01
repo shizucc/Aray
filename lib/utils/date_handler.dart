@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-class DateFormating {
+class DateHandler {
   static String createdAtFormat(DateTime dateTime) {
     DateFormat dateFormat = DateFormat('dd MMMM yyyy', 'en_US');
     DateFormat timeFormat = DateFormat('HH.mm');
