@@ -3,36 +3,38 @@ import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:intl/intl.dart';
 
 class ProjectDetailAnimationController extends GetxController {
   final isProjectNameEditing = false.obs;
   final isProjectDescriptionEditing = false.obs;
 
   TextEditingController projectNameController = TextEditingController();
+  TextEditingController projectDescriptionController = TextEditingController();
 
-  void switchisProjectNameEditing(bool value) {
+  void switchIsProjectNameEditing(bool value) {
     isProjectNameEditing.value = value;
   }
 
-  void setDefaultValueProjectName(String name) {
-    projectNameController.text = name;
+  void switchIsProjectDescriptionEditing(bool value) {
+    isProjectDescriptionEditing.value = value;
+  }
+
+  void setDefaultValueTextField(
+      TextEditingController textEditingController, String value) {
+    textEditingController.text = value;
   }
 }
 
 class ProjectDetailController extends GetxController {
   final workspace = Workspace(name: '').obs;
-
-  String dateFormating(DateTime dateTime) {
-    DateFormat dateFormat = DateFormat('dd MMMM yyyy', 'en_US');
-    DateFormat timeFormat = DateFormat('HH.mm');
-    String date = dateFormat.format(dateTime);
-    String time = timeFormat.format(dateTime);
-    return '$date at $time';
-  }
+  final workspaceId = ''.obs;
+  final projectId = ''.obs;
 
   Stream<DocumentSnapshot<Project>> streamProject(
       String workspaceId, String projectId) async* {
+    // Set Workspace ID and Project Id
+    this.workspaceId.value = workspaceId;
+    this.projectId.value = projectId;
     final workspaceRef = FirebaseFirestore.instance
         .collection('workspace')
         .doc(workspaceId)
@@ -42,6 +44,7 @@ class ProjectDetailController extends GetxController {
             toFirestore: (Workspace workspace, _) => workspace.toJson());
 
     // set Workspace
+
     final workspace = await workspaceRef.get();
     this.workspace.value = workspace.data()!;
 
@@ -54,5 +57,23 @@ class ProjectDetailController extends GetxController {
 
     final Stream<DocumentSnapshot<Project>> project = projectRef.snapshots();
     yield* project;
+  }
+
+  Future<void> updateProjectFromTextField(
+      String field, TextEditingController textEditingController) async {
+    final Map<String, String> fields = {
+      'name': 'name',
+      'description': 'description'
+    };
+    final value = textEditingController.text;
+
+    final updateProject = FirebaseFirestore.instance
+        .collection('workspace')
+        .doc(workspaceId.value)
+        .collection('project')
+        .doc(projectId.value)
+        .update({fields[field].toString(): value}).then((value) {
+      print('berhasil');
+    });
   }
 }
