@@ -9,6 +9,10 @@ class ProjectDetailAnimationController extends GetxController {
   final isProjectNameEditing = false.obs;
   final isProjectDescriptionEditing = false.obs;
 
+  // Personalize
+  final defaultTheme = ''.obs;
+  final customImage = ''.obs;
+
   TextEditingController projectNameController = TextEditingController();
   TextEditingController projectDescriptionController = TextEditingController();
 
@@ -31,6 +35,17 @@ class ProjectDetailAnimationController extends GetxController {
   void setDefaultValueTextField(
       TextEditingController textEditingController, String value) {
     textEditingController.text = value;
+  }
+
+  // Personalize,
+  // init personalize
+  void initPersonalize(Project project) {
+    final personalize = project.personalize;
+    final defaultTheme = personalize['color'];
+    final customImage = personalize['image'];
+
+    this.defaultTheme.value = defaultTheme;
+    this.customImage.value = customImage;
   }
 }
 

@@ -75,37 +75,10 @@ class ProjectDetail extends StatelessWidget {
                       height: 20,
                     ),
                     titleOfDetail("Personalize", CupertinoIcons.paintbrush),
-                    Container(
-                      alignment: Alignment.center,
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 5, horizontal: 15),
-                      margin: const EdgeInsets.symmetric(horizontal: 15),
-                      decoration: BoxDecoration(
-                          color: Color(colorTheme.baseColor!),
-                          borderRadius: BorderRadius.circular(20)),
-                      child: Row(
-                        children: [
-                          Expanded(
-                              child: Container(
-                            padding: const EdgeInsets.all(5),
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: Color(colorTheme.primaryColor!)),
-                            child: const Center(
-                                child: Text(
-                              "Use Default Theme",
-                              style: TextStyle(fontSize: 12),
-                            )),
-                          )),
-                          const Expanded(
-                              child: Center(
-                                  child: Text(
-                            "Add Cover Image",
-                            style: TextStyle(fontSize: 12),
-                          )))
-                        ],
-                      ),
-                    ),
+                    Obx(() {
+                      a.initPersonalize(project!);
+                      return personalizeField(colorTheme, a);
+                    }),
                     const SizedBox(
                       height: 20,
                     ),
@@ -131,6 +104,49 @@ class ProjectDetail extends StatelessWidget {
             },
           ),
         ),
+      ),
+    );
+  }
+
+  Widget personalizeField(
+      ColorTheme colorTheme, ProjectDetailAnimationController a) {
+    return Container(
+      child: Column(
+        children: [
+          Container(
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 15),
+            margin: const EdgeInsets.symmetric(horizontal: 15),
+            decoration: BoxDecoration(
+                color: Color(colorTheme.baseColor!),
+                borderRadius: BorderRadius.circular(20)),
+            child: Row(
+              children: [
+                Expanded(
+                    child: Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      color: Color(colorTheme.primaryColor!)),
+                  child: const Center(
+                      child: Text(
+                    "Use Default Theme",
+                    style: TextStyle(fontSize: 12),
+                  )),
+                )),
+                const Expanded(
+                    child: Center(
+                        child: Text(
+                  "Add Cover Image",
+                  style: TextStyle(fontSize: 12),
+                )))
+              ],
+            ),
+          ),
+          a.customImage.value != ""
+              ? Text("Ini bagian Cover Image")
+              : Text("Ini bagian Default")
+        ],
       ),
     );
   }
