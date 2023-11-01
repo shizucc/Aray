@@ -13,6 +13,7 @@ class ProjectDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final a = Get.put(ProjectDetailAnimationController());
     final c = Get.put(ProjectDetailController());
     final projectId = Get.arguments['projectId'];
     final workspaceId = Get.arguments['workspaceId'];
@@ -46,11 +47,30 @@ class ProjectDetail extends StatelessWidget {
               return ListView(
                 children: [
                   titleOfDetail("Project Name", CupertinoIcons.doc),
-                  Text(
-                    project!.name,
-                    style: const TextStyle(
-                        fontSize: 26, fontWeight: FontWeight.w600),
-                  ),
+                  Obx(() => Container(
+                        child: a.isProjectNameEditing.value
+                            ? TextField(
+                                controller: a.projectNameController,
+                                style: const TextStyle(
+                                    fontSize: 26, fontWeight: FontWeight.w600),
+                                // decoration: InputDecoration(),
+                                onEditingComplete: () {
+                                  a.switchisProjectNameEditing(false);
+                                },
+                              )
+                            : GestureDetector(
+                                onTap: () {
+                                  a.setDefaultValueProjectName(project.name);
+                                  a.switchisProjectNameEditing(true);
+                                },
+                                child: Text(
+                                  project!.name,
+                                  style: const TextStyle(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                      )),
                   const SizedBox(
                     height: 20,
                   ),
@@ -69,7 +89,7 @@ class ProjectDetail extends StatelessWidget {
                     height: 5,
                   ),
                   Text(
-                    project.description,
+                    project!.description,
                     style: const TextStyle(
                         fontSize: 15, fontWeight: FontWeight.w500),
                   ),

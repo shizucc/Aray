@@ -11,7 +11,7 @@ class ActivityView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ActivityController controller = Get.find<ActivityController>();
-    controller.args = Get.arguments;
+    // controller.args = Get.arguments;
     print(controller.getPath());
     return Scaffold(
       appBar: AppBar(

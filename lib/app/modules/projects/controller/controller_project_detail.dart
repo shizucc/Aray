@@ -1,8 +1,24 @@
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+
+class ProjectDetailAnimationController extends GetxController {
+  final isProjectNameEditing = false.obs;
+  final isProjectDescriptionEditing = false.obs;
+
+  TextEditingController projectNameController = TextEditingController();
+
+  void switchisProjectNameEditing(bool value) {
+    isProjectNameEditing.value = value;
+  }
+
+  void setDefaultValueProjectName(String name) {
+    projectNameController.text = name;
+  }
+}
 
 class ProjectDetailController extends GetxController {
   final workspace = Workspace(name: '').obs;
