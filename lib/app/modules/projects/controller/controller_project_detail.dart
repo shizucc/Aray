@@ -4,14 +4,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+enum Personalize { defaultTheme, customImage }
+
 class ProjectDetailAnimationController extends GetxController {
   final isShowProjectNameError = false.obs;
   final isProjectNameEditing = false.obs;
   final isProjectDescriptionEditing = false.obs;
 
+  final Rx<Personalize> personalize = Personalize.defaultTheme.obs;
   // Personalize
-  final defaultTheme = ''.obs;
-  final customImage = ''.obs;
 
   TextEditingController projectNameController = TextEditingController();
   TextEditingController projectDescriptionController = TextEditingController();
@@ -38,14 +39,19 @@ class ProjectDetailAnimationController extends GetxController {
   }
 
   // Personalize,
-  // init personalize
+  void personalizeSwitch(Personalize personalize) {
+    this.personalize.value = personalize;
+  }
+
   void initPersonalize(Project project) {
     final personalize = project.personalize;
     final defaultTheme = personalize['color'];
     final customImage = personalize['image'];
+    final isUseImage = personalize['use_image'] as bool;
 
-    this.defaultTheme.value = defaultTheme;
-    this.customImage.value = customImage;
+    if (isUseImage) {
+      personalizeSwitch(Personalize.customImage);
+    }
   }
 }
 
@@ -109,4 +115,6 @@ class ProjectDetailController extends GetxController {
       refreshProjectUpdatedAt();
     });
   }
+
+  Future<void> updateProjectPersonalizeColor() async {}
 }

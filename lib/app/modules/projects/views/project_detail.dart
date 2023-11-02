@@ -2,6 +2,7 @@ import 'package:aray/app/data/model/model_color_theme.dart';
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:aray/app/modules/projects/controller/controller_project_detail.dart';
+import 'package:aray/utils/color_constants.dart';
 import 'package:aray/utils/date_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
@@ -43,7 +44,7 @@ class ProjectDetail extends StatelessWidget {
 
               final ColorTheme colorTheme =
                   ColorTheme(code: project?.personalize['color']);
-
+              a.initPersonalize(project!);
               return GestureDetector(
                 onTap: () {
                   FocusScope.of(context).unfocus();
@@ -76,7 +77,6 @@ class ProjectDetail extends StatelessWidget {
                     ),
                     titleOfDetail("Personalize", CupertinoIcons.paintbrush),
                     Obx(() {
-                      a.initPersonalize(project!);
                       return personalizeField(colorTheme, a);
                     }),
                     const SizedBox(
@@ -123,32 +123,84 @@ class ProjectDetail extends StatelessWidget {
             child: Row(
               children: [
                 Expanded(
-                    child: Container(
-                  padding: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      color: Color(colorTheme.primaryColor!)),
-                  child: const Center(
-                      child: Text(
-                    "Use Default Theme",
-                    style: TextStyle(fontSize: 12),
-                  )),
-                )),
-                const Expanded(
-                    child: Center(
+                    child: GestureDetector(
+                  onTap: () {
+                    a.personalizeSwitch(Personalize.defaultTheme);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: a.personalize.value == Personalize.defaultTheme
+                        ? BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: Color(colorTheme.primaryColor!))
+                        : null,
+                    child: const Center(
                         child: Text(
-                  "Add Cover Image",
-                  style: TextStyle(fontSize: 12),
-                )))
+                      "Use Default Theme",
+                      style: TextStyle(fontSize: 12),
+                    )),
+                  ),
+                )),
+                Expanded(
+                    child: GestureDetector(
+                  onTap: () {
+                    a.personalizeSwitch(Personalize.customImage);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: a.personalize.value == Personalize.customImage
+                        ? BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            color: Color(colorTheme.primaryColor!))
+                        : null,
+                    child: const Center(
+                        child: Text(
+                      "Add Cover Image",
+                      style: TextStyle(fontSize: 12),
+                    )),
+                  ),
+                ))
               ],
             ),
           ),
-          a.customImage.value != ""
-              ? Text("Ini bagian Cover Image")
-              : Text("Ini bagian Default")
+          a.personalize.value == Personalize.defaultTheme
+              ? Container(
+                  padding: EdgeInsets.symmetric(horizontal: 30),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 15,
+                      ),
+                      Wrap(
+                        direction: Axis.horizontal,
+                        runSpacing: 10,
+                        spacing: 10,
+                        alignment: WrapAlignment.center,
+                        children: listColorPersonalize(),
+                      )
+                    ],
+                  ),
+                )
+              : Container()
         ],
       ),
     );
+  }
+
+  List<Widget> listColorPersonalize() {
+    return ColorConstants.colors.keys.map((colorCode) {
+      final color = ColorConstants.colors[colorCode]!;
+      final Color primaryColor = Color(color['primary_color']!);
+      return Container(
+        decoration: BoxDecoration(
+            border: Border.all(width: 3),
+            color: primaryColor,
+            borderRadius: BorderRadius.circular(10)),
+        // color: primaryColor,
+        width: 50,
+        height: 50,
+      );
+    }).toList();
   }
 
   Widget projectNameField(ProjectDetailAnimationController a,
