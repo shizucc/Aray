@@ -1,5 +1,6 @@
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
+import 'package:aray/utils/color_constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -10,9 +11,10 @@ class ProjectDetailAnimationController extends GetxController {
   final isShowProjectNameError = false.obs;
   final isProjectNameEditing = false.obs;
   final isProjectDescriptionEditing = false.obs;
+  final defaultTheme = ''.obs;
+  final customImage = ''.obs;
 
   final Rx<Personalize> personalize = Personalize.defaultTheme.obs;
-  // Personalize
 
   TextEditingController projectNameController = TextEditingController();
   TextEditingController projectDescriptionController = TextEditingController();
@@ -45,8 +47,8 @@ class ProjectDetailAnimationController extends GetxController {
 
   void initPersonalize(Project project) {
     final personalize = project.personalize;
-    final defaultTheme = personalize['color'];
-    final customImage = personalize['image'];
+    defaultTheme.value = personalize['color'];
+    customImage.value = personalize['image'];
     final isUseImage = personalize['use_image'] as bool;
 
     if (isUseImage) {
@@ -106,7 +108,7 @@ class ProjectDetailController extends GetxController {
     };
     final value = textEditingController.text;
 
-    final updateProject = FirebaseFirestore.instance
+    final updateProject = await FirebaseFirestore.instance
         .collection('workspace')
         .doc(workspaceId.value)
         .collection('project')
@@ -116,5 +118,20 @@ class ProjectDetailController extends GetxController {
     });
   }
 
-  Future<void> updateProjectPersonalizeColor() async {}
+  Future<void> updateProjectPersonalizeColor(String colorCode) async {
+    final projectRef = FirebaseFirestore.instance
+        .collection('workspace')
+        .doc(workspaceId.value)
+        .collection('project')
+        .doc(projectId.value)
+        .withConverter(
+            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
+            toFirestore: (Project project, _) => project.toJson());
+    final projectData = await projectRef.get();
+    final personalize = projectData.data()!.personalize;
+    personalize['color'] = colorCode;
+
+    // update
+    final updateProject = await projectRef.update({'personalize': personalize});
+  }
 }

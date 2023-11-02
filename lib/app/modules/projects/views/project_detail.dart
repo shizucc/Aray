@@ -77,14 +77,14 @@ class ProjectDetail extends StatelessWidget {
                     ),
                     titleOfDetail("Personalize", CupertinoIcons.paintbrush),
                     Obx(() {
-                      return personalizeField(colorTheme, a);
+                      return personalizeField(colorTheme, c, a);
                     }),
                     const SizedBox(
                       height: 20,
                     ),
                     titleOfDetail("Created at", CupertinoIcons.calendar),
                     Text(
-                      DateHandler.createdAtFormat(project!.createdAt),
+                      DateHandler.createdAtFormat(project.createdAt),
                       style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w500),
                     ),
@@ -108,8 +108,8 @@ class ProjectDetail extends StatelessWidget {
     );
   }
 
-  Widget personalizeField(
-      ColorTheme colorTheme, ProjectDetailAnimationController a) {
+  Widget personalizeField(ColorTheme colorTheme, ProjectDetailController c,
+      ProjectDetailAnimationController a) {
     return Container(
       child: Column(
         children: [
@@ -165,10 +165,10 @@ class ProjectDetail extends StatelessWidget {
           ),
           a.personalize.value == Personalize.defaultTheme
               ? Container(
-                  padding: EdgeInsets.symmetric(horizontal: 30),
+                  padding: const EdgeInsets.symmetric(horizontal: 30),
                   child: Column(
                     children: [
-                      SizedBox(
+                      const SizedBox(
                         height: 15,
                       ),
                       Wrap(
@@ -176,7 +176,7 @@ class ProjectDetail extends StatelessWidget {
                         runSpacing: 10,
                         spacing: 10,
                         alignment: WrapAlignment.center,
-                        children: listColorPersonalize(),
+                        children: listColorPersonalize(c, a),
                       )
                     ],
                   ),
@@ -187,19 +187,27 @@ class ProjectDetail extends StatelessWidget {
     );
   }
 
-  List<Widget> listColorPersonalize() {
+  List<Widget> listColorPersonalize(
+      ProjectDetailController c, ProjectDetailAnimationController a) {
     return ColorConstants.colors.keys.map((colorCode) {
       final color = ColorConstants.colors[colorCode]!;
       final Color primaryColor = Color(color['primary_color']!);
-      return Container(
-        decoration: BoxDecoration(
-            border: Border.all(width: 3),
-            color: primaryColor,
-            borderRadius: BorderRadius.circular(10)),
-        // color: primaryColor,
-        width: 50,
-        height: 50,
-      );
+      return Obx(() => GestureDetector(
+            onTap: () {
+              c.updateProjectPersonalizeColor(colorCode);
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                  border: colorCode == a.defaultTheme.value
+                      ? Border.all(width: 3)
+                      : null,
+                  color: primaryColor,
+                  borderRadius: BorderRadius.circular(10)),
+              // color: primaryColor,
+              width: 50,
+              height: 50,
+            ),
+          ));
     }).toList();
   }
 
