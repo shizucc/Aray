@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -61,7 +63,9 @@ class ProjectDetailController extends GetxController {
   final workspace = Workspace(name: '').obs;
   final workspaceId = ''.obs;
   final projectId = ''.obs;
-  final projectCoverImageUrl = ''.obs;
+  final projectCoverImageUrl =
+      'https://webstatic.hoyoverse.com/upload/op-public/2023/01/09/1a2f542593b9c3bd4209290cc6202ea4_3666194450370987357.jpg'
+          .obs;
 
   Future<void> refreshProjectUpdatedAt() async {
     FirebaseFirestore.instance
@@ -138,12 +142,11 @@ class ProjectDetailController extends GetxController {
   }
 
   Future<String> getProjectCoverImageUrl(String url) async {
-    final storageRef = FirebaseStorage.instance.ref();
-    final projectCoverImagePath =
-        "user/public/projects/project_${projectId.value}/cover_${projectId.value}";
-
     print("Hello");
     try {
+      final storageRef = FirebaseStorage.instance.ref();
+      final projectCoverImagePath =
+          "user/public/projects/project_${projectId.value}/cover_${projectId.value}";
       final projectCoverImageRef = storageRef.child(projectCoverImagePath);
       final projectCoverImageUrl = await projectCoverImageRef.getDownloadURL();
       print(projectCoverImageUrl);

@@ -1,6 +1,8 @@
 import 'package:aray/app/data/model/model_color_theme.dart';
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/modules/projects/controller/controller_project_detail.dart';
+import 'package:aray/app/modules/projects/widgets/show_dialog_delete_cover.dart';
+// import 'package:aray/app/modules/projects/widgets/show_dialog_delete_cover.dart';
 import 'package:aray/utils/color_constants.dart';
 import 'package:aray/utils/date_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -75,9 +77,7 @@ class ProjectDetail extends StatelessWidget {
                       height: 20,
                     ),
                     titleOfDetail("Personalize", CupertinoIcons.paintbrush),
-                    Obx(() {
-                      return personalizeField(colorTheme, project, c, a);
-                    }),
+                    personalizeField(context, colorTheme, project, c, a),
                     const SizedBox(
                       height: 20,
                     ),
@@ -107,7 +107,7 @@ class ProjectDetail extends StatelessWidget {
     );
   }
 
-  Widget personalizeField(ColorTheme colorTheme, Project project,
+  Widget personalizeField(BuildContext context, colorTheme, Project project,
       ProjectDetailController c, ProjectDetailAnimationController a) {
     return Container(
       child: Column(
@@ -121,61 +121,63 @@ class ProjectDetail extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20)),
             child: Row(
               children: [
-                Expanded(
-                    child: GestureDetector(
-                  onTap: () {
-                    a.personalizeSwitch(Personalize.defaultTheme);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: a.personalize.value == Personalize.defaultTheme
-                        ? BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Color(colorTheme.primaryColor!))
-                        : null,
-                    child: const Center(
-                        child: Text(
-                      "Use Default Theme",
-                      style: TextStyle(fontSize: 12),
-                    )),
-                  ),
-                )),
-                Expanded(
-                    child: GestureDetector(
-                  onTap: () {
-                    a.personalizeSwitch(Personalize.customImage);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: a.personalize.value == Personalize.customImage
-                        ? BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Color(colorTheme.primaryColor!))
-                        : null,
-                    child: const Center(
-                        child: Text(
-                      "Add Cover Image",
-                      style: TextStyle(fontSize: 12),
-                    )),
-                  ),
-                ))
+                Obx(() => Expanded(
+                        child: GestureDetector(
+                      onTap: () {
+                        a.personalizeSwitch(Personalize.defaultTheme);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration:
+                            a.personalize.value == Personalize.defaultTheme
+                                ? BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    color: Color(colorTheme.primaryColor!))
+                                : null,
+                        child: const Center(
+                            child: Text(
+                          "Use Default Theme",
+                          style: TextStyle(fontSize: 12),
+                        )),
+                      ),
+                    ))),
+                Obx(() => Expanded(
+                        child: GestureDetector(
+                      onTap: () {
+                        a.personalizeSwitch(Personalize.customImage);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration:
+                            a.personalize.value == Personalize.customImage
+                                ? BoxDecoration(
+                                    borderRadius: BorderRadius.circular(20),
+                                    color: Color(colorTheme.primaryColor!))
+                                : null,
+                        child: const Center(
+                            child: Text(
+                          "Add Cover Image",
+                          style: TextStyle(fontSize: 12),
+                        )),
+                      ),
+                    )))
               ],
             ),
           ),
-          a.personalize.value == Personalize.defaultTheme
+          Obx(() => a.personalize.value == Personalize.defaultTheme
               ? personalizeUseDefaultTheme(c, a)
-              : personalizeAddCoverImage(project, c, a)
+              : personalizeAddCoverImage(context, project, c, a))
         ],
       ),
     );
   }
 
-  Widget personalizeAddCoverImage(Project project, ProjectDetailController c,
-      ProjectDetailAnimationController a) {
+  Widget personalizeAddCoverImage(BuildContext context, Project project,
+      ProjectDetailController c, ProjectDetailAnimationController a) {
     final String projectImage = project.personalize['image'];
     return projectImage.isEmpty
         ? personalizeAddCoverImageNotExist(project, c, a)
-        : personalizeAddCoverImageExist(project, c, a);
+        : personalizeAddCoverImageExist(context, project, c, a);
   }
 
   Widget personalizeAddCoverImageNotExist(Project project,
@@ -189,7 +191,7 @@ class ProjectDetail extends StatelessWidget {
           decoration: BoxDecoration(
               color: Colors.black.withOpacity(0.1),
               borderRadius: BorderRadius.circular(15)),
-          child: Column(children: [
+          child: const Column(children: [
             Icon(
               CupertinoIcons.add,
               size: 40,
@@ -204,25 +206,94 @@ class ProjectDetail extends StatelessWidget {
     );
   }
 
-  Widget personalizeAddCoverImageExist(Project project,
+  Widget personalizeAddCoverImageExist(BuildContext context, Project project,
       ProjectDetailController c, ProjectDetailAnimationController a) {
-    return Obx(() => Container(
-          child: FutureBuilder<String>(
-            future: c.getProjectCoverImageUrl(project.personalize['image']),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return const Text('Something went wrong');
-              }
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
-              }
-              final projectCoverImageUrl = snapshot.data!;
-              print(projectCoverImageUrl);
-              // return Image.network(projectCoverImageUrl);
-              return Container();
-            },
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.only(top: 20, right: 20, left: 20),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(15),
+            child: Stack(
+              alignment: AlignmentDirectional.bottomEnd,
+              children: [
+                Image.network(key: UniqueKey(), c.projectCoverImageUrl.value),
+                Container(
+                  margin: const EdgeInsets.only(right: 10, bottom: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      GestureDetector(
+                        onTap: () {},
+                        child: Container(
+                          padding: EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(5)),
+                          child: Row(
+                            children: [
+                              Icon(CupertinoIcons.pencil,
+                                  size: 16,
+                                  color: Colors.black.withOpacity(0.5)),
+                              SizedBox(
+                                width: 5,
+                              ),
+                              Text(
+                                "Edit Cover",
+                                style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.black.withOpacity(0.5)),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 7,
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return DialogDeleteProjectCover();
+                            },
+                          );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(5),
+                          decoration: BoxDecoration(
+                              color: Color.fromRGBO(255, 131, 131, 1),
+                              borderRadius: BorderRadius.circular(5)),
+                          child: Row(
+                            children: [
+                              Icon(
+                                CupertinoIcons.trash,
+                                size: 16,
+                                color: Colors.black.withOpacity(0.5),
+                              ),
+                              SizedBox(
+                                width: 5,
+                              ),
+                              Text("Delete Cover",
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black.withOpacity(0.5)))
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Container(),
+                    ],
+                  ),
+                )
+              ],
+            ),
           ),
-        ));
+        ),
+      ],
+    );
   }
 
   Widget personalizeUseDefaultTheme(
