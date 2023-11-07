@@ -1,6 +1,6 @@
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
-import 'package:aray/utils/color_constants.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -61,6 +61,7 @@ class ProjectDetailController extends GetxController {
   final workspace = Workspace(name: '').obs;
   final workspaceId = ''.obs;
   final projectId = ''.obs;
+  final projectCoverImageUrl = ''.obs;
 
   Future<void> refreshProjectUpdatedAt() async {
     FirebaseFirestore.instance
@@ -97,6 +98,7 @@ class ProjectDetailController extends GetxController {
             toFirestore: (Project project, _) => project.toJson());
 
     final Stream<DocumentSnapshot<Project>> project = projectRef.snapshots();
+
     yield* project;
   }
 
@@ -133,5 +135,21 @@ class ProjectDetailController extends GetxController {
 
     // update
     final updateProject = await projectRef.update({'personalize': personalize});
+  }
+
+  Future<String> getProjectCoverImageUrl(String url) async {
+    final storageRef = FirebaseStorage.instance.ref();
+    final projectCoverImagePath =
+        "user/public/projects/project_${projectId.value}/cover_${projectId.value}";
+
+    print("Hello");
+    try {
+      final projectCoverImageRef = storageRef.child(projectCoverImagePath);
+      final projectCoverImageUrl = await projectCoverImageRef.getDownloadURL();
+      print(projectCoverImageUrl);
+    } catch (e) {
+      print("Image Error");
+    }
+    return "Success";
   }
 }

@@ -43,6 +43,7 @@ dependencies:
   shared_preferences: ^2.2.2
   intl: ^0.18.1
   stream_transform: ^2.1.0
+  firebase_storage: ^11.4.1
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,5 @@
 import 'package:aray/app/data/model/model_color_theme.dart';
 import 'package:aray/app/data/model/model_project.dart';
-import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:aray/app/modules/projects/controller/controller_project_detail.dart';
 import 'package:aray/utils/color_constants.dart';
 import 'package:aray/utils/date_handler.dart';
@@ -77,7 +76,7 @@ class ProjectDetail extends StatelessWidget {
                     ),
                     titleOfDetail("Personalize", CupertinoIcons.paintbrush),
                     Obx(() {
-                      return personalizeField(colorTheme, c, a);
+                      return personalizeField(colorTheme, project, c, a);
                     }),
                     const SizedBox(
                       height: 20,
@@ -108,8 +107,8 @@ class ProjectDetail extends StatelessWidget {
     );
   }
 
-  Widget personalizeField(ColorTheme colorTheme, ProjectDetailController c,
-      ProjectDetailAnimationController a) {
+  Widget personalizeField(ColorTheme colorTheme, Project project,
+      ProjectDetailController c, ProjectDetailAnimationController a) {
     return Container(
       child: Column(
         children: [
@@ -164,24 +163,84 @@ class ProjectDetail extends StatelessWidget {
             ),
           ),
           a.personalize.value == Personalize.defaultTheme
-              ? Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 30),
-                  child: Column(
-                    children: [
-                      const SizedBox(
-                        height: 15,
-                      ),
-                      Wrap(
-                        direction: Axis.horizontal,
-                        runSpacing: 10,
-                        spacing: 10,
-                        alignment: WrapAlignment.center,
-                        children: listColorPersonalize(c, a),
-                      )
-                    ],
-                  ),
-                )
-              : Container()
+              ? personalizeUseDefaultTheme(c, a)
+              : personalizeAddCoverImage(project, c, a)
+        ],
+      ),
+    );
+  }
+
+  Widget personalizeAddCoverImage(Project project, ProjectDetailController c,
+      ProjectDetailAnimationController a) {
+    final String projectImage = project.personalize['image'];
+    return projectImage.isEmpty
+        ? personalizeAddCoverImageNotExist(project, c, a)
+        : personalizeAddCoverImageExist(project, c, a);
+  }
+
+  Widget personalizeAddCoverImageNotExist(Project project,
+      ProjectDetailController c, ProjectDetailAnimationController a) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 15),
+      child: InkWell(
+        onTap: () {},
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 40),
+          decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(15)),
+          child: Column(children: [
+            Icon(
+              CupertinoIcons.add,
+              size: 40,
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            Text("Choose from files")
+          ]),
+        ),
+      ),
+    );
+  }
+
+  Widget personalizeAddCoverImageExist(Project project,
+      ProjectDetailController c, ProjectDetailAnimationController a) {
+    return Obx(() => Container(
+          child: FutureBuilder<String>(
+            future: c.getProjectCoverImageUrl(project.personalize['image']),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return const Text('Something went wrong');
+              }
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              }
+              final projectCoverImageUrl = snapshot.data!;
+              print(projectCoverImageUrl);
+              // return Image.network(projectCoverImageUrl);
+              return Container();
+            },
+          ),
+        ));
+  }
+
+  Widget personalizeUseDefaultTheme(
+      ProjectDetailController c, ProjectDetailAnimationController a) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 30),
+      child: Column(
+        children: [
+          const SizedBox(
+            height: 15,
+          ),
+          Wrap(
+            direction: Axis.horizontal,
+            runSpacing: 10,
+            spacing: 10,
+            alignment: WrapAlignment.center,
+            children: listColorPersonalize(c, a),
+          )
         ],
       ),
     );
