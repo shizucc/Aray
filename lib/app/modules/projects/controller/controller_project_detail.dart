@@ -6,6 +6,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:aray/utils/extension.dart';
+import 'package:palette_generator/palette_generator.dart';
 
 enum Personalize { defaultTheme, customImage }
 
@@ -18,6 +20,7 @@ class ProjectDetailAnimationController extends GetxController {
   final projectCoverImageUrl =
       'https://imgix.bustle.com/uploads/image/2021/9/23/b539ad6b-3417-4839-94eb-9ceb92abe21d-wccfgenshinimpact41.jpeg?w=1200&h=630&fit=crop&crop=faces&fm=jpg'
           .obs;
+  final projectCoverImageDominantColor = ''.obs;
 
   final Rx<Personalize> personalize = Personalize.defaultTheme.obs;
 
@@ -66,8 +69,6 @@ class ProjectDetailAnimationController extends GetxController {
 
   Future<void> getProjectCoverImageUrl(
       Project project, String projectId) async {
-    print("Hello");
-
     try {
       final storageRef = FirebaseStorage.instance.ref();
       final imageRef = storageRef.child(
@@ -75,6 +76,8 @@ class ProjectDetailAnimationController extends GetxController {
       // print(imageRef);
       final imageUrl = await imageRef.getDownloadURL();
       projectCoverImageUrl.value = imageUrl;
+      final c = Get.put(ProjectDetailController());
+      c.setCoverImageDominantColor(projectCoverImageUrl.value);
     } catch (e) {
       print("Image Error");
     }
@@ -85,9 +88,37 @@ class ProjectDetailController extends GetxController {
   final workspace = Workspace(name: '').obs;
   final workspaceId = ''.obs;
   final projectId = ''.obs;
-  final projectCoverImageUrl =
-      'https://webstatic.hoyoverse.com/upload/op-public/2023/01/09/1a2f542593b9c3bd4209290cc6202ea4_3666194450370987357.jpg'
-          .obs;
+
+  Future<void> setCoverImageDominantColor(String projectCoverImageUrl) async {
+    final projectRef = FirebaseFirestore.instance
+        .collection('workspace')
+        .doc(workspaceId.value)
+        .collection('project')
+        .doc(projectId.value)
+        .withConverter(
+            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
+            toFirestore: (Project project, _) => project.toJson());
+    final projectData = await projectRef.get();
+    final personalize = projectData.data()!.personalize;
+
+    // Generate Image Dominant Color
+    final palleteGenerator = await PaletteGenerator.fromImageProvider(
+        NetworkImage(projectCoverImageUrl));
+    final projectCoverImageDominantColor =
+        palleteGenerator.dominantColor!.color;
+
+    print(projectCoverImageDominantColor.toHex(withAlpha: true));
+    // personalize['image_dominant_color'] = '';
+    final dump = projectCoverImageDominantColor.toHex(withAlpha: true);
+    print(int.parse(dump));
+
+    print(projectCoverImageDominantColor);
+
+    // update
+
+    // final updateProject = await projectRef.update({'personalize': personalize});
+    // projectRef.update();
+  }
 
   Future<void> refreshProjectUpdatedAt() async {
     FirebaseFirestore.instance
