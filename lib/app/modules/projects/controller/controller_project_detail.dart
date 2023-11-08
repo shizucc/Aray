@@ -15,6 +15,9 @@ class ProjectDetailAnimationController extends GetxController {
   final isProjectDescriptionEditing = false.obs;
   final defaultTheme = ''.obs;
   final customImage = ''.obs;
+  final projectCoverImageUrl =
+      'https://imgix.bustle.com/uploads/image/2021/9/23/b539ad6b-3417-4839-94eb-9ceb92abe21d-wccfgenshinimpact41.jpeg?w=1200&h=630&fit=crop&crop=faces&fm=jpg'
+          .obs;
 
   final Rx<Personalize> personalize = Personalize.defaultTheme.obs;
 
@@ -47,7 +50,9 @@ class ProjectDetailAnimationController extends GetxController {
     this.personalize.value = personalize;
   }
 
-  void initPersonalize(Project project) {
+  // Inisiasi untuk ditampilkan di UI
+  Future<void> initPersonalize(
+      Project project, String projectId, String workspaceId) async {
     final personalize = project.personalize;
     defaultTheme.value = personalize['color'];
     customImage.value = personalize['image'];
@@ -55,6 +60,23 @@ class ProjectDetailAnimationController extends GetxController {
 
     if (isUseImage) {
       personalizeSwitch(Personalize.customImage);
+    }
+    await getProjectCoverImageUrl(project, projectId);
+  }
+
+  Future<void> getProjectCoverImageUrl(
+      Project project, String projectId) async {
+    print("Hello");
+
+    try {
+      final storageRef = FirebaseStorage.instance.ref();
+      final imageRef = storageRef.child(
+          'user/public/projects/project_${projectId}/cover/${customImage.value}');
+      // print(imageRef);
+      final imageUrl = await imageRef.getDownloadURL();
+      projectCoverImageUrl.value = imageUrl;
+    } catch (e) {
+      print("Image Error");
     }
   }
 }

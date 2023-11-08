@@ -45,7 +45,8 @@ class ProjectDetail extends StatelessWidget {
 
               final ColorTheme colorTheme =
                   ColorTheme(code: project?.personalize['color']);
-              a.initPersonalize(project!);
+              a.initPersonalize(project!, projectId, workspaceId);
+
               return GestureDetector(
                 onTap: () {
                   FocusScope.of(context).unfocus();
@@ -218,7 +219,7 @@ class ProjectDetail extends StatelessWidget {
             child: Stack(
               alignment: AlignmentDirectional.bottomEnd,
               children: [
-                Image.network(key: UniqueKey(), c.projectCoverImageUrl.value),
+                Image.network(key: UniqueKey(), a.projectCoverImageUrl.value),
                 Container(
                   margin: const EdgeInsets.only(right: 10, bottom: 10),
                   child: Row(
@@ -236,7 +237,7 @@ class ProjectDetail extends StatelessWidget {
                               Icon(CupertinoIcons.pencil,
                                   size: 16,
                                   color: Colors.black.withOpacity(0.5)),
-                              SizedBox(
+                              const SizedBox(
                                 width: 5,
                               ),
                               Text(
@@ -249,7 +250,7 @@ class ProjectDetail extends StatelessWidget {
                           ),
                         ),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         width: 7,
                       ),
                       GestureDetector(
@@ -273,7 +274,7 @@ class ProjectDetail extends StatelessWidget {
                                 size: 16,
                                 color: Colors.black.withOpacity(0.5),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 width: 5,
                               ),
                               Text("Delete Cover",

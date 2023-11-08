@@ -7,14 +7,14 @@ class DialogDeleteProjectCover extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Container(
-        padding: EdgeInsets.all(15),
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
         decoration: BoxDecoration(
             color: Colors.white, borderRadius: BorderRadius.circular(10)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text(
+            const Text(
               "Are you sure to delete this cover?",
               style: TextStyle(
                   fontSize: 18, fontWeight: FontWeight.w700, color: Colors.red),
@@ -28,7 +28,6 @@ class DialogDeleteProjectCover extends StatelessWidget {
             ),
             Row(
               mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
                     onPressed: () {
