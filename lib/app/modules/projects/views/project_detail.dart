@@ -113,16 +113,21 @@ class ProjectDetail extends StatelessWidget {
     return Container(
       child: Column(
         children: [
-          Container(
-            alignment: Alignment.center,
-            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 15),
-            margin: const EdgeInsets.symmetric(horizontal: 15),
-            decoration: BoxDecoration(
-                color: Color(colorTheme.baseColor!),
-                borderRadius: BorderRadius.circular(20)),
-            child: Row(
-              children: [
-                Obx(() => Expanded(
+          Obx(() => Container(
+                alignment: Alignment.center,
+                padding:
+                    const EdgeInsets.symmetric(vertical: 7, horizontal: 15),
+                margin: const EdgeInsets.symmetric(horizontal: 15),
+                decoration: BoxDecoration(
+                    color: a.isUseImage.value
+                        ? a.projectCoverImageDominantColor.value
+                            .withOpacity(0.4)
+                        : Color(colorTheme.baseColor!),
+                    // Color(colorTheme.baseColor!),
+                    borderRadius: BorderRadius.circular(20)),
+                child: Row(
+                  children: [
+                    Expanded(
                         child: GestureDetector(
                       onTap: () {
                         a.personalizeSwitch(Personalize.defaultTheme);
@@ -133,16 +138,28 @@ class ProjectDetail extends StatelessWidget {
                             a.personalize.value == Personalize.defaultTheme
                                 ? BoxDecoration(
                                     borderRadius: BorderRadius.circular(20),
-                                    color: Color(colorTheme.primaryColor!))
+                                    color: a.isUseImage.value
+                                        ? a.projectCoverImageDominantColor.value
+                                            .withOpacity(0.8)
+                                        : Color(colorTheme.primaryColor!))
                                 : null,
-                        child: const Center(
+                        child: Center(
                             child: Text(
                           "Use Default Theme",
-                          style: TextStyle(fontSize: 12),
+                          style: a.isUseImage.value
+                              ? TextStyle(
+                                  fontSize: 12,
+                                  color: a.projectCoverImageDominantColor.value
+                                              .computeLuminance() <
+                                          0.5
+                                      ? Colors.white
+                                      : Colors.black)
+                              : const TextStyle(
+                                  color: Colors.black, fontSize: 12),
                         )),
                       ),
-                    ))),
-                Obx(() => Expanded(
+                    )),
+                    Expanded(
                         child: GestureDetector(
                       onTap: () {
                         a.personalizeSwitch(Personalize.customImage);
@@ -153,18 +170,30 @@ class ProjectDetail extends StatelessWidget {
                             a.personalize.value == Personalize.customImage
                                 ? BoxDecoration(
                                     borderRadius: BorderRadius.circular(20),
-                                    color: Color(colorTheme.primaryColor!))
+                                    color: a.isUseImage.value
+                                        ? a.projectCoverImageDominantColor.value
+                                            .withOpacity(0.8)
+                                        : Color(colorTheme.primaryColor!))
                                 : null,
-                        child: const Center(
+                        child: Center(
                             child: Text(
                           "Add Cover Image",
-                          style: TextStyle(fontSize: 12),
+                          style: a.isUseImage.value
+                              ? TextStyle(
+                                  fontSize: 12,
+                                  color: a.projectCoverImageDominantColor.value
+                                              .computeLuminance() <
+                                          0.5
+                                      ? Colors.white
+                                      : Colors.black)
+                              : const TextStyle(
+                                  color: Colors.black, fontSize: 12),
                         )),
                       ),
-                    )))
-              ],
-            ),
-          ),
+                    ))
+                  ],
+                ),
+              )),
           Obx(() => a.personalize.value == Personalize.defaultTheme
               ? personalizeUseDefaultTheme(c, a)
               : personalizeAddCoverImage(context, project, c, a))
@@ -228,7 +257,7 @@ class ProjectDetail extends StatelessWidget {
                       GestureDetector(
                         onTap: () {},
                         child: Container(
-                          padding: EdgeInsets.all(5),
+                          padding: const EdgeInsets.all(5),
                           decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.8),
                               borderRadius: BorderRadius.circular(5)),
@@ -263,9 +292,9 @@ class ProjectDetail extends StatelessWidget {
                           );
                         },
                         child: Container(
-                          padding: EdgeInsets.all(5),
+                          padding: const EdgeInsets.all(5),
                           decoration: BoxDecoration(
-                              color: Color.fromRGBO(255, 131, 131, 1),
+                              color: const Color.fromRGBO(255, 131, 131, 1),
                               borderRadius: BorderRadius.circular(5)),
                           child: Row(
                             children: [
@@ -293,6 +322,19 @@ class ProjectDetail extends StatelessWidget {
             ),
           ),
         ),
+        Container(
+          child: Row(
+            children: [
+              Switch(
+                value: project.personalize['use_image'] as bool,
+                onChanged: (value) {
+                  c.updateIsUseImage(value);
+                },
+              ),
+              Text("Enable use Image as Cover?")
+            ],
+          ),
+        )
       ],
     );
   }

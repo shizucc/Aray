@@ -15,12 +15,13 @@ class ProjectDetailAnimationController extends GetxController {
   final isShowProjectNameError = false.obs;
   final isProjectNameEditing = false.obs;
   final isProjectDescriptionEditing = false.obs;
+  final isUseImage = false.obs;
   final defaultTheme = ''.obs;
   final customImage = ''.obs;
   final projectCoverImageUrl =
       'https://imgix.bustle.com/uploads/image/2021/9/23/b539ad6b-3417-4839-94eb-9ceb92abe21d-wccfgenshinimpact41.jpeg?w=1200&h=630&fit=crop&crop=faces&fm=jpg'
           .obs;
-  final projectCoverImageDominantColor = ''.obs;
+  final projectCoverImageDominantColor = const Color(0x0fffffff).obs;
 
   final Rx<Personalize> personalize = Personalize.defaultTheme.obs;
 
@@ -61,7 +62,9 @@ class ProjectDetailAnimationController extends GetxController {
     customImage.value = personalize['image'];
     final isUseImage = personalize['use_image'] as bool;
 
-    if (isUseImage) {
+    this.isUseImage.value = isUseImage;
+
+    if (this.isUseImage.value) {
       personalizeSwitch(Personalize.customImage);
     }
     await getProjectCoverImageUrl(project, projectId);
@@ -72,12 +75,14 @@ class ProjectDetailAnimationController extends GetxController {
     try {
       final storageRef = FirebaseStorage.instance.ref();
       final imageRef = storageRef.child(
-          'user/public/projects/project_${projectId}/cover/${customImage.value}');
+          'user/public/projects/project_$projectId/cover/${customImage.value}');
       // print(imageRef);
       final imageUrl = await imageRef.getDownloadURL();
       projectCoverImageUrl.value = imageUrl;
       final c = Get.put(ProjectDetailController());
-      c.setCoverImageDominantColor(projectCoverImageUrl.value);
+
+      projectCoverImageDominantColor.value =
+          await c.getCoverImageDominantColor(projectCoverImageUrl.value);
     } catch (e) {
       print("Image Error");
     }
@@ -89,7 +94,7 @@ class ProjectDetailController extends GetxController {
   final workspaceId = ''.obs;
   final projectId = ''.obs;
 
-  Future<void> setCoverImageDominantColor(String projectCoverImageUrl) async {
+  Future<Color> getCoverImageDominantColor(String projectCoverImageUrl) async {
     final projectRef = FirebaseFirestore.instance
         .collection('workspace')
         .doc(workspaceId.value)
@@ -107,17 +112,19 @@ class ProjectDetailController extends GetxController {
     final projectCoverImageDominantColor =
         palleteGenerator.dominantColor!.color;
 
-    print(projectCoverImageDominantColor.toHex(withAlpha: true));
-    // personalize['image_dominant_color'] = '';
-    final dump = projectCoverImageDominantColor.toHex(withAlpha: true);
-    print(int.parse(dump));
-
+    // print(projectCoverImageDominantColor.toHex(withAlpha: true));
+    personalize['image_dominant_color'] = projectCoverImageDominantColor.value;
+    // final dump = projectCoverImageDominantColor.toHex(withAlpha: true);
+    // print(int.parse(dump));
     print(projectCoverImageDominantColor);
-
+    // print(0xFFFFFFFF & projectCoverImageDominantColor.value);
+    Color myColor = Color(0xFFFFFFFF & projectCoverImageDominantColor.value);
+    print(myColor);
     // update
 
-    // final updateProject = await projectRef.update({'personalize': personalize});
+    final updateProject = await projectRef.update({'personalize': personalize});
     // projectRef.update();
+    return myColor;
   }
 
   Future<void> refreshProjectUpdatedAt() async {
@@ -207,5 +214,21 @@ class ProjectDetailController extends GetxController {
       print("Image Error");
     }
     return "Success";
+  }
+
+  Future<void> updateIsUseImage(bool isUseImage) async {
+    final projectRef = FirebaseFirestore.instance
+        .collection('workspace')
+        .doc(workspaceId.value)
+        .collection('project')
+        .doc(projectId.value)
+        .withConverter(
+            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
+            toFirestore: (Project project, _) => project.toJson());
+    final projectData = await projectRef.get();
+    final personalize = projectData.data()!.personalize;
+
+    personalize['use_image'] = isUseImage;
+    final updateProject = await projectRef.update({'personalize': personalize});
   }
 }
