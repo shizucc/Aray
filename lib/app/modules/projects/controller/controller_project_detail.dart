@@ -62,6 +62,7 @@ class ProjectDetailAnimationController extends GetxController {
     defaultTheme.value = personalize['color'];
     customImage.value = personalize['image'];
     final isUseImage = personalize['use_image'] as bool;
+    // final g = Get.put(ProjectGlobalController());
 
     this.isUseImage.value = isUseImage;
 
@@ -69,9 +70,10 @@ class ProjectDetailAnimationController extends GetxController {
       personalizeSwitch(Personalize.customImage);
     }
     final projectCoverImageUrl =
-        // await getProjectCoverImageUrl(project, projectId);
         await ProjectGlobalController.getProjectCoverImageUrl(
             project, projectId);
+
+    print(projectCoverImageUrl);
 
     this.projectCoverImageUrl.value = projectCoverImageUrl;
 
@@ -98,6 +100,24 @@ class ProjectDetailController extends GetxController {
     await updateProjectImageDominantColor(projectCoverImageDominantColor.value);
 
     return myColor;
+  }
+
+  Future<void> updateProjectImageLink(Project project) async {
+    final projectImageLink = ProjectGlobalController.getProjectCoverImageUrl(
+        project, projectId.value);
+
+    final projectRef = FirebaseFirestore.instance
+        .collection('workspace')
+        .doc(workspaceId.value)
+        .collection('project')
+        .doc(projectId.value)
+        .withConverter(
+            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
+            toFirestore: (Project project, _) => project.toJson());
+    final projectData = await projectRef.get();
+    final personalize = projectData.data()!.personalize;
+    personalize['image_link'] = projectImageLink;
+    final updateProject = await projectRef.update({'personalize': personalize});
   }
 
   Future<void> refreshProjectUpdatedAt() async {

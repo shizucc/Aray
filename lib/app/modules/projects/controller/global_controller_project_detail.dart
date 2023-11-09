@@ -12,4 +12,6 @@ class ProjectGlobalController extends GetxController {
     final imageUrl = await imageRef.getDownloadURL();
     return imageUrl;
   }
+
+  void greeting() {}
 }

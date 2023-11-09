@@ -5,6 +5,7 @@ import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:aray/app/modules/projects/controller/animation_controller_project.dart';
 import 'package:aray/app/modules/projects/controller/controller_project.dart';
+import 'package:aray/app/modules/projects/controller/global_controller_project_detail.dart';
 import 'package:aray/app/routes/app_pages.dart';
 import 'package:aray/utils/extension.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -18,7 +19,7 @@ class ProjectView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Get.put(ProjectController());
-    final a = Get.put(ProjectAnimationController());
+    final g = Get.put(ProjectGlobalController());
     final QueryDocumentSnapshot<Project> projectSnapshot =
         Get.arguments['project'];
     final DocumentReference<Workspace> workspaceRef =
@@ -52,6 +53,10 @@ class ProjectView extends StatelessWidget {
 
         final bool isProjectCoverImageDark =
             projectCoverImageDominantColor.isDark;
+
+        final projectCoverImageUrl =
+            projectData.personalize['image_link'] as String;
+
         return Scaffold(
           backgroundColor: isUseImage
               ? projectCoverImageDominantColor
@@ -107,7 +112,11 @@ class ProjectView extends StatelessWidget {
           ),
           body: Container(
             height: Get.height,
-            // decoration: BoxDecoration(color: Colors.red),
+            decoration: BoxDecoration(
+                image: DecorationImage(
+                    fit: BoxFit.cover,
+                    image: NetworkImage(
+                        "https://firebasestorage.googleapis.com/v0/b/project-aray.appspot.com/o/user%2Fpublic%2Fprojects%2Fproject_eEF2UzTMkEe3Ak6Ohq2c%2Fcover%2Fmamahyor.jpg?alt=media&token=d2a97ae9-34d9-44f9-a515-db250de4b514"))),
             padding: const EdgeInsets.symmetric(vertical: 25),
             child: StreamBuilder<QuerySnapshot<CardModel>>(
               stream: c.streamCards(projectSnapshot, workspaceRef),
