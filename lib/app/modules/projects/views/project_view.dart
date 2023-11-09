@@ -5,8 +5,8 @@ import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:aray/app/modules/projects/controller/animation_controller_project.dart';
 import 'package:aray/app/modules/projects/controller/controller_project.dart';
-import 'package:aray/app/modules/projects/controller/controller_project_detail.dart';
 import 'package:aray/app/routes/app_pages.dart';
+import 'package:aray/utils/extension.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -28,7 +28,7 @@ class ProjectView extends StatelessWidget {
     const Color cardColor = Color.fromRGBO(241, 239, 239, 1);
     // a.streamProject(workspaceRef.id, projectSnapshot.id);
     return StreamBuilder(
-      stream: a.streamProject(workspaceRef.id, projectSnapshot.id),
+      stream: c.streamProject(workspaceRef.id, projectSnapshot.id),
       builder: (context, snapshot) {
         if (!snapshot.hasData ||
             snapshot.hasError ||
@@ -43,14 +43,46 @@ class ProjectView extends StatelessWidget {
         final Project projectData = projectStream.data()!;
         final projectColor = projectData.personalize['color'];
         final projectTheme = ColorTheme(code: projectColor);
+        final bool isUseImage = projectData.personalize['use_image'] as bool;
+
+        final int projectCoverImageDominantColorDecimal =
+            projectData.personalize['image_dominant_color'] ?? 0;
+        final Color projectCoverImageDominantColor =
+            Color(0xFFFFFFFF & projectCoverImageDominantColorDecimal);
+
+        final bool isProjectCoverImageDark =
+            projectCoverImageDominantColor.isDark;
         return Scaffold(
-          backgroundColor: Color(projectTheme.baseColor!),
+          backgroundColor: isUseImage
+              ? projectCoverImageDominantColor
+              : Color(projectTheme.baseColor!),
           appBar: AppBar(
             elevation: 1,
-            backgroundColor: Color(projectTheme.primaryColor!),
+            backgroundColor: isUseImage
+                ? projectCoverImageDominantColor
+                : Color(projectTheme.primaryColor!),
+            leading: IconButton(
+                onPressed: () {
+                  Get.back();
+                },
+                icon: isUseImage
+                    ? Icon(
+                        Icons.arrow_back,
+                        color: isProjectCoverImageDark
+                            ? Colors.white
+                            : Colors.black,
+                      )
+                    : const Icon(
+                        Icons.arrow_back,
+                        color: Colors.white,
+                      )),
             title: Text(
               projectData.name,
-              style: TextStyle(color: Colors.white),
+              style: isUseImage
+                  ? TextStyle(
+                      color:
+                          isProjectCoverImageDark ? Colors.white : Colors.black)
+                  : const TextStyle(color: Colors.white),
             ),
             actions: [
               IconButton(
@@ -60,10 +92,22 @@ class ProjectView extends StatelessWidget {
                       'workspaceId': workspaceRef.id
                     });
                   },
-                  icon: const Icon(CupertinoIcons.ellipsis))
+                  icon: isUseImage
+                      ? Icon(
+                          CupertinoIcons.ellipsis,
+                          color: isProjectCoverImageDark
+                              ? Colors.white
+                              : Colors.black,
+                        )
+                      : const Icon(
+                          CupertinoIcons.ellipsis,
+                          color: Colors.white,
+                        ))
             ],
           ),
-          body: Padding(
+          body: Container(
+            height: Get.height,
+            // decoration: BoxDecoration(color: Colors.red),
             padding: const EdgeInsets.symmetric(vertical: 25),
             child: StreamBuilder<QuerySnapshot<CardModel>>(
               stream: c.streamCards(projectSnapshot, workspaceRef),

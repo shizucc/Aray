@@ -1,5 +1,6 @@
 import 'package:aray/app/data/model/model_activity.dart';
 import 'package:aray/app/data/model/model_card.dart';
+import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
@@ -11,7 +12,21 @@ class ProjectController extends GetxController {
   Map<String, String> activitiesPath = {};
 
   // Stream 1 project
-  Stream<dynamic> streamProject(String projectId) async* {}
+  Stream<DocumentSnapshot<Project>> streamProject(
+      String workspaceId, String projectId) async* {
+    final projectRef = FirebaseFirestore.instance
+        .collection('workspace')
+        .doc(workspaceId)
+        .collection('project')
+        .doc(projectId)
+        .withConverter(
+            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
+            toFirestore: (Project project, _) => project.toJson());
+
+    final Stream<DocumentSnapshot<Project>> project = projectRef.snapshots();
+    yield* project;
+  }
+
   // Stream semua card
   Stream<QuerySnapshot<CardModel>> streamCards(
       QueryDocumentSnapshot projectSnapshot,

@@ -2,7 +2,8 @@ import 'package:aray/app/data/model/model_color_theme.dart';
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/modules/projects/controller/controller_project_detail.dart';
 import 'package:aray/app/modules/projects/widgets/show_dialog_delete_cover.dart';
-// import 'package:aray/app/modules/projects/widgets/show_dialog_delete_cover.dart';
+import 'package:aray/utils/extension.dart';
+import 'package:gap/gap.dart';
 import 'package:aray/utils/color_constants.dart';
 import 'package:aray/utils/date_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -45,7 +46,7 @@ class ProjectDetail extends StatelessWidget {
 
               final ColorTheme colorTheme =
                   ColorTheme(code: project?.personalize['color']);
-              a.initPersonalize(project!, projectId, workspaceId);
+              a.initPersonalize(c, project!, projectId, workspaceId);
 
               return GestureDetector(
                 onTap: () {
@@ -110,6 +111,12 @@ class ProjectDetail extends StatelessWidget {
 
   Widget personalizeField(BuildContext context, colorTheme, Project project,
       ProjectDetailController c, ProjectDetailAnimationController a) {
+    final bool isUseImage = project.personalize['use_image'] as bool;
+    final int projectCoverImageDominantColorDecimal =
+        project.personalize['image_dominant_color'] ?? 0;
+    final Color projectCoverImageDominantColor =
+        Color(0xFFFFFFFF & projectCoverImageDominantColorDecimal);
+    final bool isProjectCoverImageDark = projectCoverImageDominantColor.isDark;
     return Container(
       child: Column(
         children: [
@@ -119,9 +126,8 @@ class ProjectDetail extends StatelessWidget {
                     const EdgeInsets.symmetric(vertical: 7, horizontal: 15),
                 margin: const EdgeInsets.symmetric(horizontal: 15),
                 decoration: BoxDecoration(
-                    color: a.isUseImage.value
-                        ? a.projectCoverImageDominantColor.value
-                            .withOpacity(0.4)
+                    color: isUseImage
+                        ? projectCoverImageDominantColor.withOpacity(0.4)
                         : Color(colorTheme.baseColor!),
                     // Color(colorTheme.baseColor!),
                     borderRadius: BorderRadius.circular(20)),
@@ -138,20 +144,18 @@ class ProjectDetail extends StatelessWidget {
                             a.personalize.value == Personalize.defaultTheme
                                 ? BoxDecoration(
                                     borderRadius: BorderRadius.circular(20),
-                                    color: a.isUseImage.value
-                                        ? a.projectCoverImageDominantColor.value
+                                    color: isUseImage
+                                        ? projectCoverImageDominantColor
                                             .withOpacity(0.8)
                                         : Color(colorTheme.primaryColor!))
                                 : null,
                         child: Center(
                             child: Text(
                           "Use Default Theme",
-                          style: a.isUseImage.value
+                          style: isUseImage
                               ? TextStyle(
                                   fontSize: 12,
-                                  color: a.projectCoverImageDominantColor.value
-                                              .computeLuminance() <
-                                          0.5
+                                  color: isProjectCoverImageDark
                                       ? Colors.white
                                       : Colors.black)
                               : const TextStyle(
@@ -170,20 +174,18 @@ class ProjectDetail extends StatelessWidget {
                             a.personalize.value == Personalize.customImage
                                 ? BoxDecoration(
                                     borderRadius: BorderRadius.circular(20),
-                                    color: a.isUseImage.value
-                                        ? a.projectCoverImageDominantColor.value
+                                    color: isUseImage
+                                        ? projectCoverImageDominantColor
                                             .withOpacity(0.8)
                                         : Color(colorTheme.primaryColor!))
                                 : null,
                         child: Center(
                             child: Text(
                           "Add Cover Image",
-                          style: a.isUseImage.value
+                          style: isUseImage
                               ? TextStyle(
                                   fontSize: 12,
-                                  color: a.projectCoverImageDominantColor.value
-                                              .computeLuminance() <
-                                          0.5
+                                  color: isProjectCoverImageDark
                                       ? Colors.white
                                       : Colors.black)
                               : const TextStyle(
@@ -238,6 +240,10 @@ class ProjectDetail extends StatelessWidget {
 
   Widget personalizeAddCoverImageExist(BuildContext context, Project project,
       ProjectDetailController c, ProjectDetailAnimationController a) {
+    final int projectCoverImageDominantColorDecimal =
+        project.personalize['image_dominant_color'] ?? 0;
+    final Color projectCoverImageDominantColor =
+        Color(0xFFFFFFFF & projectCoverImageDominantColorDecimal);
     return Column(
       children: [
         Container(
@@ -322,16 +328,25 @@ class ProjectDetail extends StatelessWidget {
             ),
           ),
         ),
+        const Gap(5),
         Container(
+          margin: const EdgeInsets.only(left: 20),
           child: Row(
             children: [
               Switch(
+                activeColor: projectCoverImageDominantColor,
+                materialTapTargetSize: MaterialTapTargetSize.padded,
+                // trackOutlineWidth: MaterialStatePropertyAll(5),
                 value: project.personalize['use_image'] as bool,
                 onChanged: (value) {
-                  c.updateIsUseImage(value);
+                  c.updateProjectUseImage(value);
                 },
               ),
-              Text("Enable use Image as Cover?")
+              const Gap(5),
+              const Text(
+                "Enable use Image as Cover?",
+                style: TextStyle(fontSize: 14),
+              )
             ],
           ),
         )
@@ -348,13 +363,23 @@ class ProjectDetail extends StatelessWidget {
           const SizedBox(
             height: 15,
           ),
-          Wrap(
-            direction: Axis.horizontal,
-            runSpacing: 10,
-            spacing: 10,
-            alignment: WrapAlignment.center,
-            children: listColorPersonalize(c, a),
-          )
+          IgnorePointer(
+            ignoring: a.isUseImage.value,
+            child: Wrap(
+              direction: Axis.horizontal,
+              runSpacing: 10,
+              spacing: 10,
+              alignment: WrapAlignment.center,
+              children: listColorPersonalize(c, a),
+            ),
+          ),
+          const Gap(10),
+          a.isUseImage.value
+              ? const Text(
+                  "Disable Cover Image first for use Default Theme!",
+                  style: TextStyle(color: Colors.red, fontSize: 12),
+                )
+              : Container()
         ],
       ),
     );

@@ -45,6 +45,7 @@ dependencies:
   stream_transform: ^2.1.0
   firebase_storage: ^11.4.1
   palette_generator: ^0.3.3+3
+  gap: ^3.0.1
 
 dev_dependencies:
   flutter_test:

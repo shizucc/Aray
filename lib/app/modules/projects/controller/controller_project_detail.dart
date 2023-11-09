@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
+import 'package:aray/app/modules/projects/controller/global_controller_project_detail.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -55,8 +56,8 @@ class ProjectDetailAnimationController extends GetxController {
   }
 
   // Inisiasi untuk ditampilkan di UI
-  Future<void> initPersonalize(
-      Project project, String projectId, String workspaceId) async {
+  Future<void> initPersonalize(ProjectDetailController c, Project project,
+      String projectId, String workspaceId) async {
     final personalize = project.personalize;
     defaultTheme.value = personalize['color'];
     customImage.value = personalize['image'];
@@ -67,25 +68,17 @@ class ProjectDetailAnimationController extends GetxController {
     if (this.isUseImage.value) {
       personalizeSwitch(Personalize.customImage);
     }
-    await getProjectCoverImageUrl(project, projectId);
-  }
+    final projectCoverImageUrl =
+        // await getProjectCoverImageUrl(project, projectId);
+        await ProjectGlobalController.getProjectCoverImageUrl(
+            project, projectId);
 
-  Future<void> getProjectCoverImageUrl(
-      Project project, String projectId) async {
-    try {
-      final storageRef = FirebaseStorage.instance.ref();
-      final imageRef = storageRef.child(
-          'user/public/projects/project_$projectId/cover/${customImage.value}');
-      // print(imageRef);
-      final imageUrl = await imageRef.getDownloadURL();
-      projectCoverImageUrl.value = imageUrl;
-      final c = Get.put(ProjectDetailController());
+    this.projectCoverImageUrl.value = projectCoverImageUrl;
 
-      projectCoverImageDominantColor.value =
-          await c.getCoverImageDominantColor(projectCoverImageUrl.value);
-    } catch (e) {
-      print("Image Error");
-    }
+    final Color projectCoverImageDominantColor =
+        await c.getCoverImageDominantColor(projectCoverImageUrl);
+
+    this.projectCoverImageDominantColor.value = projectCoverImageDominantColor;
   }
 }
 
@@ -95,35 +88,15 @@ class ProjectDetailController extends GetxController {
   final projectId = ''.obs;
 
   Future<Color> getCoverImageDominantColor(String projectCoverImageUrl) async {
-    final projectRef = FirebaseFirestore.instance
-        .collection('workspace')
-        .doc(workspaceId.value)
-        .collection('project')
-        .doc(projectId.value)
-        .withConverter(
-            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
-            toFirestore: (Project project, _) => project.toJson());
-    final projectData = await projectRef.get();
-    final personalize = projectData.data()!.personalize;
-
     // Generate Image Dominant Color
     final palleteGenerator = await PaletteGenerator.fromImageProvider(
         NetworkImage(projectCoverImageUrl));
     final projectCoverImageDominantColor =
         palleteGenerator.dominantColor!.color;
 
-    // print(projectCoverImageDominantColor.toHex(withAlpha: true));
-    personalize['image_dominant_color'] = projectCoverImageDominantColor.value;
-    // final dump = projectCoverImageDominantColor.toHex(withAlpha: true);
-    // print(int.parse(dump));
-    print(projectCoverImageDominantColor);
-    // print(0xFFFFFFFF & projectCoverImageDominantColor.value);
     Color myColor = Color(0xFFFFFFFF & projectCoverImageDominantColor.value);
-    print(myColor);
-    // update
+    await updateProjectImageDominantColor(projectCoverImageDominantColor.value);
 
-    final updateProject = await projectRef.update({'personalize': personalize});
-    // projectRef.update();
     return myColor;
   }
 
@@ -201,22 +174,23 @@ class ProjectDetailController extends GetxController {
     final updateProject = await projectRef.update({'personalize': personalize});
   }
 
-  Future<String> getProjectCoverImageUrl(String url) async {
-    print("Hello");
-    try {
-      final storageRef = FirebaseStorage.instance.ref();
-      final projectCoverImagePath =
-          "user/public/projects/project_${projectId.value}/cover_${projectId.value}";
-      final projectCoverImageRef = storageRef.child(projectCoverImagePath);
-      final projectCoverImageUrl = await projectCoverImageRef.getDownloadURL();
-      print(projectCoverImageUrl);
-    } catch (e) {
-      print("Image Error");
-    }
-    return "Success";
+  Future<void> updateProjectImageDominantColor(int colorDecimal) async {
+    final projectRef = FirebaseFirestore.instance
+        .collection('workspace')
+        .doc(workspaceId.value)
+        .collection('project')
+        .doc(projectId.value)
+        .withConverter(
+            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
+            toFirestore: (Project project, _) => project.toJson());
+    final projectData = await projectRef.get();
+    final personalize = projectData.data()!.personalize;
+
+    personalize['image_dominant_color'] = colorDecimal;
+    final updateProject = await projectRef.update({'personalize': personalize});
   }
 
-  Future<void> updateIsUseImage(bool isUseImage) async {
+  Future<void> updateProjectUseImage(bool isUseImage) async {
     final projectRef = FirebaseFirestore.instance
         .collection('workspace')
         .doc(workspaceId.value)
