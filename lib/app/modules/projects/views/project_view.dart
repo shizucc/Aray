@@ -26,7 +26,7 @@ class ProjectView extends StatelessWidget {
         Get.arguments['workspace'];
     final Project project = projectSnapshot.data();
 
-    const Color cardColor = Color.fromRGBO(241, 239, 239, 1);
+    Color cardColor = const Color.fromRGBO(241, 239, 239, 1).withOpacity(0.95);
     // a.streamProject(workspaceRef.id, projectSnapshot.id);
     return StreamBuilder(
       stream: c.streamProject(workspaceRef.id, projectSnapshot.id),
@@ -152,7 +152,7 @@ class ProjectView extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.only(
                                     left: 20, right: 20, top: 5),
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                     color: cardColor,
                                     borderRadius: BorderRadius.only(
                                         topLeft: Radius.circular(10),
@@ -173,7 +173,7 @@ class ProjectView extends StatelessWidget {
                                 ),
                               ),
                               Container(
-                                decoration: const BoxDecoration(
+                                decoration: BoxDecoration(
                                     color: cardColor,
                                     borderRadius: BorderRadius.only(
                                         bottomLeft: Radius.circular(10),
