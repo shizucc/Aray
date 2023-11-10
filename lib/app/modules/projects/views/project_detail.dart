@@ -10,6 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProjectDetail extends StatelessWidget {
   const ProjectDetail({super.key});
@@ -244,6 +245,8 @@ class ProjectDetail extends StatelessWidget {
         project.personalize['image_dominant_color'] ?? 0;
     final Color projectCoverImageDominantColor =
         Color(0xFFFFFFFF & projectCoverImageDominantColorDecimal);
+
+    final projectCoverImageUrl = project.personalize['image_link'];
     return Column(
       children: [
         Container(
@@ -254,14 +257,18 @@ class ProjectDetail extends StatelessWidget {
             child: Stack(
               alignment: AlignmentDirectional.bottomEnd,
               children: [
-                Image.network(key: UniqueKey(), a.projectCoverImageUrl.value),
+                Image.network(projectCoverImageUrl),
                 Container(
                   margin: const EdgeInsets.only(right: 10, bottom: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       GestureDetector(
-                        onTap: () {},
+                        onTap: () {
+                          a.pickProjectCoverImageFile();
+                          c.updateProjectCoverImage(
+                              a.projectCoverImageFile.value);
+                        },
                         child: Container(
                           padding: const EdgeInsets.all(5),
                           decoration: BoxDecoration(

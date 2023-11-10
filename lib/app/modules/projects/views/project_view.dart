@@ -112,11 +112,13 @@ class ProjectView extends StatelessWidget {
           ),
           body: Container(
             height: Get.height,
+            width: Get.width,
             decoration: BoxDecoration(
-                image: DecorationImage(
-                    fit: BoxFit.cover,
-                    image: NetworkImage(
-                        "https://firebasestorage.googleapis.com/v0/b/project-aray.appspot.com/o/user%2Fpublic%2Fprojects%2Fproject_eEF2UzTMkEe3Ak6Ohq2c%2Fcover%2Fmamahyor.jpg?alt=media&token=d2a97ae9-34d9-44f9-a515-db250de4b514"))),
+                image: isUseImage
+                    ? DecorationImage(
+                        fit: BoxFit.cover,
+                        image: NetworkImage(projectCoverImageUrl))
+                    : null),
             padding: const EdgeInsets.symmetric(vertical: 25),
             child: StreamBuilder<QuerySnapshot<CardModel>>(
               stream: c.streamCards(projectSnapshot, workspaceRef),

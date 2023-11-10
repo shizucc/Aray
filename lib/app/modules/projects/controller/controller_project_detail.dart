@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
@@ -9,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:aray/utils/extension.dart';
 import 'package:palette_generator/palette_generator.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 
 enum Personalize { defaultTheme, customImage }
 
@@ -19,9 +22,8 @@ class ProjectDetailAnimationController extends GetxController {
   final isUseImage = false.obs;
   final defaultTheme = ''.obs;
   final customImage = ''.obs;
-  final projectCoverImageUrl =
-      'https://imgix.bustle.com/uploads/image/2021/9/23/b539ad6b-3417-4839-94eb-9ceb92abe21d-wccfgenshinimpact41.jpeg?w=1200&h=630&fit=crop&crop=faces&fm=jpg'
-          .obs;
+  final projectCoverImageFile = File('').obs;
+
   final projectCoverImageDominantColor = const Color(0x0fffffff).obs;
 
   final Rx<Personalize> personalize = Personalize.defaultTheme.obs;
@@ -59,10 +61,8 @@ class ProjectDetailAnimationController extends GetxController {
   Future<void> initPersonalize(ProjectDetailController c, Project project,
       String projectId, String workspaceId) async {
     final personalize = project.personalize;
-    defaultTheme.value = personalize['color'];
-    customImage.value = personalize['image'];
+
     final isUseImage = personalize['use_image'] as bool;
-    // final g = Get.put(ProjectGlobalController());
 
     this.isUseImage.value = isUseImage;
 
@@ -75,12 +75,21 @@ class ProjectDetailAnimationController extends GetxController {
 
     print(projectCoverImageUrl);
 
-    this.projectCoverImageUrl.value = projectCoverImageUrl;
-
     final Color projectCoverImageDominantColor =
         await c.getCoverImageDominantColor(projectCoverImageUrl);
 
     this.projectCoverImageDominantColor.value = projectCoverImageDominantColor;
+  }
+
+  Future<void> pickProjectCoverImageFile() async {
+    final picker = ImagePicker();
+    final pickedImage = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedImage != null) {
+      projectCoverImageFile.value = File(pickedImage.path);
+    }
+    final String projectCoverImageFileName =
+        projectCoverImageFile.value.path.split('/').last;
   }
 }
 
@@ -224,5 +233,24 @@ class ProjectDetailController extends GetxController {
 
     personalize['use_image'] = isUseImage;
     final updateProject = await projectRef.update({'personalize': personalize});
+  }
+
+  Future<void> updateProjectCoverImage(File projectCoverImageFile) async {
+    String projectCoverImageFileName =
+        projectCoverImageFile.path.split('/').last;
+
+    try {
+      Directory appDocDir = await getApplicationDocumentsDirectory();
+      String filePath = '${appDocDir.absolute}/${projectCoverImageFileName}';
+
+      File file = File(filePath);
+      final projectCoverImageStorageRef = FirebaseStorage.instance.ref().child(
+          'user/public/projects/project_${projectId}/cover/${projectCoverImageFileName}');
+
+      await projectCoverImageStorageRef.putFile(file);
+      print("Project Cover Updated");
+    } catch (e) {
+      print(e);
+    }
   }
 }
