@@ -1,5 +1,6 @@
 import 'package:aray/app/modules/auth/views/login_page.dart';
 import 'package:aray/app/modules/projects/views/project_view.dart';
+import 'package:aray/app/modules/workspaces/views/workspace_detail.dart';
 import 'package:aray/app/modules/workspaces/views/workspaces_view.dart';
 import 'package:aray/app/routes/app_pages.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -30,7 +31,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       getPages: AppPages.routes,
-      home: _streamUser(),
+      home: WorkspaceDetail(),
     );
   }
 }
