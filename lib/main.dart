@@ -1,4 +1,6 @@
 import 'package:aray/app/modules/auth/views/login_page.dart';
+import 'package:aray/app/modules/projects/views/project_add.dart';
+import 'package:aray/app/modules/projects/views/project_add_shimmer.dart';
 import 'package:aray/app/modules/projects/views/project_view.dart';
 import 'package:aray/app/modules/workspaces/views/workspaces_view.dart';
 import 'package:aray/app/routes/app_pages.dart';
@@ -30,7 +32,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       getPages: AppPages.routes,
-      home: _streamUser(),
+      home: ProjectAddShimmer(),
     );
   }
 }

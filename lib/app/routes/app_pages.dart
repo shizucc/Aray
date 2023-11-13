@@ -4,6 +4,7 @@ import 'package:aray/app/modules/auth/bindings/bindings_login_page.dart';
 import 'package:aray/app/modules/auth/views/login_page.dart';
 import 'package:aray/app/modules/projects/bindings/bindings_project.dart';
 import 'package:aray/app/modules/projects/bindings/bindings_project_detail.dart';
+import 'package:aray/app/modules/projects/views/project_add.dart';
 import 'package:aray/app/modules/projects/views/project_detail.dart';
 import 'package:aray/app/modules/projects/views/project_view.dart';
 import 'package:aray/app/modules/workspaces/bindings/bindings_workspace.dart';
@@ -36,6 +37,10 @@ class AppPages {
     GetPage(
         name: _Paths.PROJECTDETAIL,
         page: () => const ProjectDetail(),
-        binding: ProjectDetailBinding())
+        binding: ProjectDetailBinding()),
+        GetPage(
+          name: _Paths.PROJECTADD,
+          page: () => const ProjectAdd(),
+        )
   ];
 }
