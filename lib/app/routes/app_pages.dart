@@ -7,6 +7,7 @@ import 'package:aray/app/modules/projects/bindings/bindings_project_detail.dart'
 import 'package:aray/app/modules/projects/views/project_detail.dart';
 import 'package:aray/app/modules/projects/views/project_view.dart';
 import 'package:aray/app/modules/workspaces/bindings/bindings_workspace.dart';
+import 'package:aray/app/modules/workspaces/views/workspace_detail.dart';
 import 'package:aray/app/modules/workspaces/views/workspaces_view.dart';
 import 'package:get/get.dart';
 part 'app_routes.dart';
@@ -36,6 +37,7 @@ class AppPages {
     GetPage(
         name: _Paths.PROJECTDETAIL,
         page: () => const ProjectDetail(),
-        binding: ProjectDetailBinding())
+        binding: ProjectDetailBinding()),
+    GetPage(name: _Paths.WORKSPACEDETAIL, page: () => const WorkspaceDetail())
   ];
 }

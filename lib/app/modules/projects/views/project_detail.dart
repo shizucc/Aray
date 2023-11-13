@@ -396,6 +396,7 @@ class ProjectDetail extends StatelessWidget {
       ProjectDetailController c, ProjectDetailAnimationController a) {
     return ColorConstants.colors.keys.map((colorCode) {
       final color = ColorConstants.colors[colorCode]!;
+
       final Color primaryColor = Color(color['primary_color']!);
       return Obx(() => GestureDetector(
             onTap: () {

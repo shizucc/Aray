@@ -67,6 +67,7 @@ class WorskpaceList extends StatelessWidget {
       itemCount: workspaces.length,
       itemBuilder: (context, index) {
         final workspace = workspaces[index];
+
         return FutureBuilder(
             future: c.getWorkspaceName(workspace),
             builder: (context, nameSnapshot) {
@@ -119,7 +120,15 @@ class WorskpaceList extends StatelessWidget {
                                             fontWeight: FontWeight.w500),
                                       ),
                                     ),
-                                    const Icon(CupertinoIcons.ellipsis),
+                                    IconButton(
+                                        onPressed: () {
+                                          print("Tombol  ditekan");
+                                          Get.toNamed('/workspace/detail',
+                                              arguments: {
+                                                'workspaceId': workspace.id
+                                              });
+                                        },
+                                        icon: Icon(CupertinoIcons.ellipsis)),
                                     const SizedBox(width: 15)
                                   ],
                                 ),
