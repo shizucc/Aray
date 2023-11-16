@@ -70,16 +70,16 @@ class ProjectDetailAnimationController extends GetxController {
     if (this.isUseImage.value) {
       personalizeSwitch(Personalize.customImage);
     }
-    final projectCoverImageUrl =
-        await ProjectGlobalController.getProjectCoverImageUrl(
-            project, projectId);
+    // final projectCoverImageUrl =
+    //     await ProjectGlobalController.getProjectCoverImageUrl(
+    //         project, projectId);
 
-    print(projectCoverImageUrl);
+    // print(projectCoverImageUrl);
 
-    final Color projectCoverImageDominantColor =
-        await c.getCoverImageDominantColor(projectCoverImageUrl);
+    // final Color projectCoverImageDominantColor =
+    //     await c.getCoverImageDominantColor(projectCoverImageUrl);
 
-    this.projectCoverImageDominantColor.value = projectCoverImageDominantColor;
+    // this.projectCoverImageDominantColor.value = projectCoverImageDominantColor;
   }
 
   Future<void> pickProjectCoverImageFile() async {
@@ -99,22 +99,15 @@ class ProjectDetailController extends GetxController {
   final workspaceId = ''.obs;
   final projectId = ''.obs;
 
-  Future<Color> getCoverImageDominantColor(String projectCoverImageUrl) async {
+  Future<void> updateCoverImageDominantColor(
+      String projectCoverImageUrl) async {
     // Generate Image Dominant Color
     final palleteGenerator = await PaletteGenerator.fromImageProvider(
         NetworkImage(projectCoverImageUrl));
     final projectCoverImageDominantColor =
         palleteGenerator.dominantColor!.color;
 
-    Color myColor = Color(0xFFFFFFFF & projectCoverImageDominantColor.value);
-    await updateProjectImageDominantColor(projectCoverImageDominantColor.value);
-
-    return myColor;
-  }
-
-  Future<void> updateProjectImageLink(Project project) async {
-    final projectImageLink = ProjectGlobalController.getProjectCoverImageUrl(
-        project, projectId.value);
+    // Color myColor = Color(0xFFFFFFFF & projectCoverImageDominantColor.value);
 
     final projectRef = FirebaseFirestore.instance
         .collection('workspace')
@@ -126,7 +119,26 @@ class ProjectDetailController extends GetxController {
             toFirestore: (Project project, _) => project.toJson());
     final projectData = await projectRef.get();
     final personalize = projectData.data()!.personalize;
-    personalize['image_link'] = projectImageLink;
+
+    personalize['image_dominant_color'] = projectCoverImageDominantColor.value;
+    final updateProject = await projectRef.update({'personalize': personalize});
+    // return myColor;
+  }
+
+  Future<void> updateProjectCoverImageLink(
+      String projectCoverImageLink, String projectCoverImageFileName) async {
+    final projectRef = FirebaseFirestore.instance
+        .collection('workspace')
+        .doc(workspaceId.value)
+        .collection('project')
+        .doc(projectId.value)
+        .withConverter(
+            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
+            toFirestore: (Project project, _) => project.toJson());
+    final projectData = await projectRef.get();
+    final personalize = projectData.data()!.personalize;
+    personalize['image'] = projectCoverImageFileName;
+    personalize['image_link'] = projectCoverImageLink;
     final updateProject = await projectRef.update({'personalize': personalize});
   }
 
@@ -236,22 +248,63 @@ class ProjectDetailController extends GetxController {
     final updateProject = await projectRef.update({'personalize': personalize});
   }
 
-  Future<void> updateProjectCoverImage(File projectCoverImageFile) async {
+  Future<bool> updateProjectCoverImage(
+      Project project, File projectCoverImageFile) async {
     String projectCoverImageFileName =
-        projectCoverImageFile.path.split('/').last;
+        Timestamp.now().toString() + projectCoverImageFile.path.split('/').last;
+    final projectCoverImageStorageRef = FirebaseStorage.instance.ref().child(
+        'user/public/projects/project_$projectId/cover/$projectCoverImageFileName');
 
-    try {
-      Directory appDocDir = await getApplicationDocumentsDirectory();
-      String filePath = '${appDocDir.absolute}/${projectCoverImageFileName}';
+    final uploadProjectCoverImage = await projectCoverImageStorageRef.putFile(
+        projectCoverImageFile,
+        SettableMetadata(
+          contentType: "image/jpeg",
+        ));
 
-      File file = File(filePath);
-      final projectCoverImageStorageRef = FirebaseStorage.instance.ref().child(
-          'user/public/projects/project_${projectId}/cover/${projectCoverImageFileName}');
+    if (uploadProjectCoverImage.state == TaskState.success) {
+      // Delete old cover image
+      final oldProjectCoverImageFileName = project.personalize['image'];
 
-      await projectCoverImageStorageRef.putFile(file);
-      print("Project Cover Updated");
-    } catch (e) {
-      print(e);
+      try {
+        final projectCoverImageStorageRef = FirebaseStorage.instance.ref().child(
+            'user/public/projects/project_$projectId/cover/$oldProjectCoverImageFileName');
+        await projectCoverImageStorageRef.delete();
+      } catch (e) {}
+
+      final projectCoverImageLink =
+          await projectCoverImageStorageRef.getDownloadURL();
+      await updateProjectCoverImageLink(
+          projectCoverImageLink, projectCoverImageFileName);
+      await updateCoverImageDominantColor(projectCoverImageLink);
+      return true;
+    } else {
+      return false;
     }
+  }
+
+  Future<void> deleteProjectCoverImage() async {
+    final projectRef = FirebaseFirestore.instance
+        .collection('workspace')
+        .doc(workspaceId.value)
+        .collection('project')
+        .doc(projectId.value)
+        .withConverter(
+            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
+            toFirestore: (Project project, _) => project.toJson());
+
+    final projectSnapshot = await projectRef.get();
+    final Project project = projectSnapshot.data()!;
+
+    final personalize = project.personalize;
+    final projectCoverImageFileName = personalize['image'] as String;
+    final projectCoverImageStorageRef = FirebaseStorage.instance.ref().child(
+        'user/public/projects/project_$projectId/cover/$projectCoverImageFileName');
+
+    await projectCoverImageStorageRef.delete();
+    personalize['image'] = '';
+    final updateProject = await projectRef.update({'personalize': personalize});
+
+    // Set image to ''
+    updateProjectUseImage(false);
   }
 }

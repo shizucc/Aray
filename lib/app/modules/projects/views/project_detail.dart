@@ -218,7 +218,11 @@ class ProjectDetail extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 15),
       child: InkWell(
-        onTap: () {},
+        borderRadius: BorderRadius.circular(15),
+        onTap: () {
+          a.pickProjectCoverImageFile();
+          c.updateProjectCoverImage(project, a.projectCoverImageFile.value);
+        },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 40),
           decoration: BoxDecoration(
@@ -257,7 +261,13 @@ class ProjectDetail extends StatelessWidget {
             child: Stack(
               alignment: AlignmentDirectional.bottomEnd,
               children: [
-                Image.network(projectCoverImageUrl),
+                Container(
+                    width: Get.width,
+                    height: Get.width / 2.5,
+                    child: Image.network(
+                      projectCoverImageUrl,
+                      fit: BoxFit.cover,
+                    )),
                 Container(
                   margin: const EdgeInsets.only(right: 10, bottom: 10),
                   child: Row(
@@ -267,7 +277,7 @@ class ProjectDetail extends StatelessWidget {
                         onTap: () {
                           a.pickProjectCoverImageFile();
                           c.updateProjectCoverImage(
-                              a.projectCoverImageFile.value);
+                              project, a.projectCoverImageFile.value);
                         },
                         child: Container(
                           padding: const EdgeInsets.all(5),
@@ -300,7 +310,9 @@ class ProjectDetail extends StatelessWidget {
                           showDialog(
                             context: context,
                             builder: (context) {
-                              return DialogDeleteProjectCover();
+                              return DialogDeleteProjectCover(
+                                c: c,
+                              );
                             },
                           );
                         },

@@ -139,9 +139,10 @@ class WorskpaceList extends StatelessWidget {
                                           children: projectList!.map((project) {
                                             return ProjectTile(
                                                 title: project.data().name,
-                                                image: project
-                                                    .data()
-                                                    .personalize['image'],
+                                                image:
+                                                    project.data().personalize[
+                                                            'image_link'] ??
+                                                        '',
                                                 onTap: () {
                                                   Get.toNamed(Routes.PROJECT,
                                                       arguments: {

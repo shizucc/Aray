@@ -1,8 +1,10 @@
+import 'package:aray/app/modules/projects/controller/controller_project_detail.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 class DialogDeleteProjectCover extends StatelessWidget {
-  const DialogDeleteProjectCover({super.key});
-
+  const DialogDeleteProjectCover({super.key, required this.c});
+  final ProjectDetailController c;
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -38,7 +40,11 @@ class DialogDeleteProjectCover extends StatelessWidget {
                       style: TextStyle(color: Colors.black.withOpacity(0.7)),
                     )),
                 TextButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      c.deleteProjectCoverImage().then((value) {
+                        Navigator.pop(context);
+                      });
+                    },
                     child: Text(
                       "Delete",
                       style: TextStyle(color: Colors.red),
