@@ -266,9 +266,8 @@ class ProjectActivities extends StatelessWidget {
                           onTap: () {
                             Get.toNamed("/activity/detail", arguments: {
                               "card_id": cardSnapshot.id,
-                              "card_path": c.cardPath,
+                              "card_path": c.cardPath.value,
                               "activity_id": activitySnapshot.id,
-                              "activity_path": c.activityPath.value
                             });
                           },
                           child: Container(

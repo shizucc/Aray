@@ -29,7 +29,7 @@ class Activity {
       required this.order});
 
   factory Activity.fromJson(Map<String, dynamic> json) {
-    final timestamp = json['timestamp'];
+    final timestamp = json['timestamp'] as bool;
     if (timestamp) {
       return Activity.withTimestamp(
           name: json['name'] as String,
@@ -38,7 +38,7 @@ class Activity {
           startTime: (json['start_time'] as Timestamp).toDate(),
           endTime: (json['end_time'] as Timestamp).toDate(),
           files: json['files'] ?? [],
-          timestamp: timestamp as bool,
+          timestamp: timestamp,
           order: json['order'] as int);
     } else {
       return Activity.withoutTimestamp(
@@ -46,7 +46,7 @@ class Activity {
           description: json['description'] as String,
           coverImage: json['cover_image'] as String,
           files: json['files'] ?? [],
-          timestamp: timestamp as bool,
+          timestamp: timestamp,
           order: json['order'] as int);
     }
   }
