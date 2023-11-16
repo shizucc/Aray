@@ -1,4 +1,3 @@
-import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:aray/app/modules/workspaces/controller/animation_controller_workspace.dart';
 import 'package:aray/app/modules/workspaces/controller/controller_workspace.dart';
@@ -146,8 +145,11 @@ class WorskpaceList extends StatelessWidget {
                                                 onTap: () {
                                                   Get.toNamed(Routes.PROJECT,
                                                       arguments: {
-                                                        "workspace": workspace,
-                                                        "project": project
+                                                        "project":
+                                                            project.data(),
+                                                        "workspaceId":
+                                                            workspace.id,
+                                                        "projectId": project.id
                                                       });
                                                 });
                                           }).toList(),

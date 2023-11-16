@@ -29,11 +29,12 @@ class ProjectController extends GetxController {
 
   // Stream semua card
   Stream<QuerySnapshot<CardModel>> streamCards(
-      QueryDocumentSnapshot projectSnapshot,
-      DocumentReference<Workspace> workspaceRef) async* {
-    final cardRef = workspaceRef
+      String projectId, String workspaceId) async* {
+    final cardRef = FirebaseFirestore.instance
+        .collection('workspace')
+        .doc(workspaceId)
         .collection('project')
-        .doc(projectSnapshot.id)
+        .doc(projectId)
         .collection('card')
         .withConverter(
             fromFirestore: (snapshot, _) =>
@@ -46,11 +47,10 @@ class ProjectController extends GetxController {
   }
 
   // Stream Activity dengan parameter satu card
-  Stream<QuerySnapshot<Activity>> streamActivities(
-      QueryDocumentSnapshot<CardModel> cardSnapshot) async* {
+  Stream<QuerySnapshot<Activity>> streamActivities(String cardId) async* {
     final activityRef = FirebaseFirestore.instance
         .collection(cardPath.value)
-        .doc(cardSnapshot.id)
+        .doc(cardId)
         .collection('activity')
         .withConverter(
             fromFirestore: (snapshot, _) => Activity.fromJson(snapshot.data()!),
@@ -63,13 +63,10 @@ class ProjectController extends GetxController {
 
   // Reorder Activity
   Future<void> reorderActivity(
-      QueryDocumentSnapshot<Activity> activitySnapshot,
-      QueryDocumentSnapshot<CardModel> cardSnapshot,
-      int oldIndex,
-      int newIndex) async {
+      String cardId, int oldIndex, int newIndex) async {
     final activityRef = FirebaseFirestore.instance
         .collection(cardPath.value)
-        .doc(cardSnapshot.id)
+        .doc(cardId)
         .collection('activity')
         .withConverter(
             fromFirestore: (snapshot, _) => Activity.fromJson(snapshot.data()!),
