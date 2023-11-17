@@ -70,16 +70,6 @@ class ProjectDetailAnimationController extends GetxController {
     if (this.isUseImage.value) {
       personalizeSwitch(Personalize.customImage);
     }
-    // final projectCoverImageUrl =
-    //     await ProjectGlobalController.getProjectCoverImageUrl(
-    //         project, projectId);
-
-    // print(projectCoverImageUrl);
-
-    // final Color projectCoverImageDominantColor =
-    //     await c.getCoverImageDominantColor(projectCoverImageUrl);
-
-    // this.projectCoverImageDominantColor.value = projectCoverImageDominantColor;
   }
 
   Future<void> pickProjectCoverImageFile() async {
@@ -106,8 +96,6 @@ class ProjectDetailController extends GetxController {
         NetworkImage(projectCoverImageUrl));
     final projectCoverImageDominantColor =
         palleteGenerator.dominantColor!.color;
-
-    // Color myColor = Color(0xFFFFFFFF & projectCoverImageDominantColor.value);
 
     final projectRef = FirebaseFirestore.instance
         .collection('workspace')

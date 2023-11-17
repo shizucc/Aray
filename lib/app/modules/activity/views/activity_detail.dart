@@ -1,4 +1,5 @@
 import 'package:aray/app/data/model/model_activity.dart';
+import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_checklist.dart';
 import 'package:aray/app/modules/activity/controller/controller_activity_detail.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -337,6 +338,10 @@ class ActivityDescriptionField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ActivityDetailAnimationController a =
+        Get.find<ActivityDetailAnimationController>();
+
+    final ActivityDetailController c = Get.find<ActivityDetailController>();
     return Container(
       padding: const EdgeInsets.all(10),
       margin: const EdgeInsets.all(40),
@@ -356,10 +361,38 @@ class ActivityDescriptionField extends StatelessWidget {
             style:
                 TextStyle(fontSize: 13, color: Colors.black.withOpacity(0.5)),
           ),
-          Text(
-            activity.description,
-            style: TextStyle(fontSize: 15),
-          )
+          Obx(() {
+            final TextEditingController controller =
+                a.activityDescriptionController;
+            controller.text = activity.description;
+            final isEditing = a.isEditingProjectDescription.value;
+            return GestureDetector(
+              onTap: () {
+                a.isEditingProjectDescription.value = !isEditing;
+              },
+              child: isEditing
+                  ? TextField(
+                      autofocus: true,
+                      controller: controller,
+                      onEditingComplete: () {
+                        a.isEditingProjectDescription.value = !isEditing;
+                        if (controller.text != activity.description) {
+                          c.updateActivityTextField(
+                              'description', controller.text);
+                        }
+                      },
+                      style: const TextStyle(fontSize: 14),
+                    )
+                  : Text(
+                      activity.description.isEmpty
+                          ? "Add Activity Description"
+                          : activity.description,
+                      style: const TextStyle(
+                        fontSize: 14,
+                      ),
+                    ),
+            );
+          }),
         ],
       ),
     );
@@ -376,29 +409,59 @@ class ActivityNameField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final a = Get.find<ActivityDetailAnimationController>();
+    final c = Get.find<ActivityDetailController>();
     return Container(
         margin: const EdgeInsets.only(
           left: 30,
           right: 30,
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Text(
-                  activity.name,
-                  style: const TextStyle(
-                      fontSize: 24, fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Text("In Board 'Endour Studio'",
+            Obx(() {
+              final TextEditingController controller = a.activityNameController;
+              controller.text = activity.name;
+              final isEditing = a.isEditingProjectName.value;
+              return GestureDetector(
+                onTap: () {
+                  a.isEditingProjectName.value = !isEditing;
+                },
+                child: isEditing
+                    ? TextField(
+                        autofocus: true,
+                        controller: controller,
+                        onEditingComplete: () {
+                          a.isEditingProjectName.value = !isEditing;
+                          if (controller.text != activity.name) {
+                            c.updateActivityTextField('name', controller.text);
+                          }
+                        },
+                        style: const TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.w700),
+                      )
+                    : Text(
+                        activity.name,
+                        style: const TextStyle(
+                            fontSize: 24, fontWeight: FontWeight.w700),
+                      ),
+              );
+            }),
+            FutureBuilder(
+              future: c.getCard(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Text("Something went wrong");
+                } else if (snapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  return CircularProgressIndicator();
+                }
+                final CardModel card = snapshot.data!;
+                return Text("In Card '${card.name}'",
                     style: TextStyle(
-                        fontSize: 15, color: Colors.black.withOpacity(0.5))),
-              ],
-            )
+                        fontSize: 15, color: Colors.black.withOpacity(0.5)));
+              },
+            ),
           ],
         ));
   }
