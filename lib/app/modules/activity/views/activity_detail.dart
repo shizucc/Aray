@@ -1,6 +1,7 @@
 import 'package:aray/app/data/model/model_activity.dart';
+import 'package:aray/app/data/model/model_checklist.dart';
 import 'package:aray/app/modules/activity/controller/controller_activity_detail.dart';
-import 'package:aray/app/modules/activity/widgets/checktile.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -11,6 +12,7 @@ class ActivityDetail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Get.put(ActivityDetailController());
+    final a = Get.put(ActivityDetailAnimationController());
     c.args = Get.arguments;
     return Scaffold(
         body: StreamBuilder(
@@ -25,6 +27,7 @@ class ActivityDetail extends StatelessWidget {
         final Activity activity = activitySnapshot.data()!;
         return ActivityDetailData(
           activity: activity,
+          a: a,
           c: c,
         );
       },
@@ -34,12 +37,15 @@ class ActivityDetail extends StatelessWidget {
 
 class ActivityDetailData extends StatelessWidget {
   const ActivityDetailData(
-      {super.key, required this.activity, required this.c});
+      {super.key, required this.activity, required this.c, required this.a});
   final Activity activity;
   final ActivityDetailController c;
+  final ActivityDetailAnimationController a;
 
   @override
   Widget build(BuildContext context) {
+    final ActivityDetailAnimationController a =
+        Get.find<ActivityDetailAnimationController>();
     return CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: <Widget>[
@@ -66,6 +72,7 @@ class ActivityDetailData extends StatelessWidget {
               ActivityDescriptionField(activity: activity),
               ActivityTimeStampField(),
               ActivityChecklistField(
+                a: a,
                 c: c,
               ),
               ActivityAttachmentField(),
@@ -137,8 +144,9 @@ class ActivityAttachmentField extends StatelessWidget {
 }
 
 class ActivityChecklistField extends StatelessWidget {
-  const ActivityChecklistField({super.key, required this.c});
+  const ActivityChecklistField({super.key, required this.c, required this.a});
   final ActivityDetailController c;
+  final ActivityDetailAnimationController a;
 
   @override
   Widget build(BuildContext context) {
@@ -162,11 +170,15 @@ class ActivityChecklistField extends StatelessWidget {
                 style: TextStyle(
                     fontSize: 13, color: Colors.black.withOpacity(0.5)),
               ),
-              const Icon(
-                Icons.add,
-                color: Colors.grey,
-                size: 15,
-              )
+              IconButton(
+                  onPressed: () {
+                    c.addNewChecklist();
+                  },
+                  icon: const Icon(
+                    Icons.add,
+                    color: Colors.grey,
+                    size: 15,
+                  ))
             ],
           ),
           Column(children: checklist()),
@@ -189,14 +201,13 @@ class ActivityChecklistField extends StatelessWidget {
           final checklistSnapshot = snapshot.data!;
           final checklist = checklistSnapshot.docs;
 
-          final checklistWidgets = checklist.map((check) {
-            final TextEditingController textEditingController =
-                TextEditingController();
-            final checkTile = check.data();
-            return EditableCheckTile(
-                title: checkTile.name,
-                textEditingController: textEditingController,
-                onFinishEditing: () {});
+          final checklistWidgets = checklist.asMap().entries.map((entry) {
+            final index = entry.key;
+            final checkTileSnapshot = entry.value;
+            // Init textEditingController
+            a.initCheckList();
+
+            return checkTile(checkTileSnapshot, index);
           }).toList();
 
           return Column(
@@ -205,6 +216,74 @@ class ActivityChecklistField extends StatelessWidget {
         },
       ),
     ];
+  }
+
+  Widget checkTile(
+      QueryDocumentSnapshot<Checklist> checkTileSnaphsot, int index) {
+    final TextEditingController textEditingController =
+        a.getChecklistTextController(index);
+    final checkTile = checkTileSnaphsot.data();
+    textEditingController.text = checkTile.name;
+    final isChecked = checkTile.status;
+    return Container(
+      child: Row(
+        children: [
+          IconButton(
+              onPressed: () {
+                c.updateChecklistStatus(checkTileSnaphsot.id, !isChecked);
+              },
+              icon: isChecked
+                  ? const Icon(
+                      Icons.check_box,
+                      size: 18,
+                    )
+                  : const Icon(
+                      Icons.crop_square,
+                      size: 18,
+                    )),
+          Expanded(
+            child: Obx(() {
+              final bool isEditing = a.getIsEditingChecklist(index);
+              return GestureDetector(
+                  onTap: () {
+                    a.switchIsEditingChecklist(index, !isEditing);
+                  },
+                  child: isEditing
+                      ? TextField(
+                          autofocus: true,
+                          controller: textEditingController,
+                          onEditingComplete: () {
+                            a.switchIsEditingChecklist(index, !isEditing);
+                            if (textEditingController.text != checkTile.name) {
+                              c.updateCheckListName(checkTileSnaphsot.id,
+                                  textEditingController.text);
+                            }
+                          },
+                        )
+                      : Text(checkTile.name));
+            }),
+          ),
+          PopupMenuButton(
+            icon: const Icon(
+              CupertinoIcons.ellipsis_vertical,
+              size: 14,
+            ),
+            itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+              PopupMenuItem(
+                value: 'delete_checklist_in_activity',
+                onTap: () {
+                  c.deleteChecklist(checkTileSnaphsot.id);
+                },
+                child: const Text(
+                  'Delete this cheklist',
+                  style: TextStyle(color: Colors.red, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
 

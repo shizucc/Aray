@@ -36,6 +36,9 @@ class AppPages {
         page: () => const ProjectDetail(),
         binding: ProjectDetailBinding()),
     GetPage(name: _Paths.WORKSPACEDETAIL, page: () => const WorkspaceDetail()),
-    GetPage(name: _Paths.ACTIVITYDETAIL, page: () => const ActivityDetail()),
+    GetPage(
+        name: _Paths.ACTIVITYDETAIL,
+        page: () => const ActivityDetail(),
+        binding: ActivityDetailBinding()),
   ];
 }
