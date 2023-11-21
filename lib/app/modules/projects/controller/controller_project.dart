@@ -1,9 +1,30 @@
 import 'package:aray/app/data/model/model_activity.dart';
 import 'package:aray/app/data/model/model_card.dart';
+import 'package:aray/app/data/model/model_color_theme.dart';
 import 'package:aray/app/data/model/model_project.dart';
-import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
+
+class ProjectAnimationController extends GetxController {
+  final Rx<Color> colorTheme = const Color(0x00000000).obs;
+
+  set colorTheme(value) => colorTheme.value = value;
+  Color getColorTheme(Project project) {
+    final bool isUseImage = project.personalize['use_image'] as bool;
+    if (isUseImage) {
+      final int projectCoverImageDominantColorDecimal =
+          project.personalize['image_dominant_color'] ?? 0;
+      final Color projectCoverImageDominantColor =
+          Color(0xFFFFFFFF & projectCoverImageDominantColorDecimal);
+      return projectCoverImageDominantColor;
+    } else {
+      final projectColor = project.personalize['color'];
+      final projectTheme = ColorTheme(code: projectColor);
+      return Color(projectTheme.primaryColor!);
+    }
+  }
+}
 
 class ProjectController extends GetxController {
   final RxString cardPath = ''.obs;

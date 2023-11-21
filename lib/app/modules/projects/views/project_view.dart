@@ -16,6 +16,7 @@ class ProjectView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = Get.put(ProjectController());
+    final a = Get.put(ProjectAnimationController());
 
     final String projectId = Get.arguments['projectId'];
     final String workspaceId = Get.arguments['workspaceId'];
@@ -51,6 +52,8 @@ class ProjectView extends StatelessWidget {
 
         final projectCoverImageUrl =
             project.personalize['image_link'] as String;
+
+        a.colorTheme.value = a.getColorTheme(project);
 
         return Scaffold(
           backgroundColor: isUseImage
@@ -229,6 +232,7 @@ class ProjectActivities extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ProjectAnimationController a = Get.put(ProjectAnimationController());
     return Container(
       decoration: BoxDecoration(
           color: cardColor,
@@ -265,6 +269,7 @@ class ProjectActivities extends StatelessWidget {
                         child: InkWell(
                           onTap: () {
                             Get.toNamed("/activity/detail", arguments: {
+                              "color_theme": a.colorTheme.value,
                               "card_id": cardSnapshot.id,
                               "card_path": c.cardPath.value,
                               "activity_id": activitySnapshot.id,

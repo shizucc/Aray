@@ -86,7 +86,7 @@ class ProjectDetail extends StatelessWidget {
                     ),
                     titleOfDetail("Created at", CupertinoIcons.calendar),
                     Text(
-                      DateHandler.createdAtFormat(project.createdAt),
+                      DateHandler.dateAndTimeFormat(project.createdAt),
                       style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w500),
                     ),
@@ -96,7 +96,7 @@ class ProjectDetail extends StatelessWidget {
                     titleOfDetail(
                         "Last Modified", CupertinoIcons.calendar_today),
                     Text(
-                      DateHandler.createdAtFormat(project.updatedAt),
+                      DateHandler.dateAndTimeFormat(project.updatedAt),
                       style: const TextStyle(
                           fontSize: 15, fontWeight: FontWeight.w500),
                     ),

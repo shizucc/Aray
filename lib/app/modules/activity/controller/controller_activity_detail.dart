@@ -3,8 +3,8 @@ import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_checklist.dart';
 import 'package:aray/app/modules/activity/controller/crud_controller_activity.dart';
 import 'package:aray/app/modules/activity/controller/crud_controller_checklist.dart';
+import 'package:aray/utils/extension.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -12,11 +12,17 @@ class ActivityDetailAnimationController extends GetxController {
   final RxList<TextEditingController> checklistTextEditingControllers =
       <TextEditingController>[].obs;
   final RxList<bool> isEditingCheckList = <bool>[].obs;
+  final Rx<DateTimeRange> selectedDateTimeRange = DateTimeRange(
+    start: DateTime.now(),
+    end: DateTime.now(),
+  ).obs;
+  final Rx<Color> colorThemeActivity = const Color(0x00000000).obs;
 
   final isEditingProjectName = false.obs;
   final isEditingProjectDescription = false.obs;
   final isEditingProjectStartTime = false.obs;
   final isEditingProjectDueDate = false.obs;
+  final isProjectTimeStampFinished = false.obs;
 
   set isEditingProjectName(value) => isEditingProjectName.value = value;
   set isEditingProjectDescription(value) =>
@@ -24,6 +30,19 @@ class ActivityDetailAnimationController extends GetxController {
   set isEditingProjectStartTime(value) =>
       isEditingProjectStartTime.value = value;
   set isEditingProjectDueDate(value) => isEditingProjectDueDate.value = value;
+
+  set isProjectTimeStampFinished(value) =>
+      isProjectTimeStampFinished.value = value;
+  set selectedDateTimeRange(value) => selectedDateTimeRange.value = value;
+
+  void setColorThemeActivity(Color value) {
+    if (value.isDark) {
+      colorThemeActivity.value = value;
+    } else {
+      final darkenColor = value.darken(0.2);
+      colorThemeActivity.value = darkenColor;
+    }
+  }
 
   final TextEditingController activityNameController = TextEditingController();
   final TextEditingController activityDescriptionController =
@@ -46,6 +65,8 @@ class ActivityDetailAnimationController extends GetxController {
     isEditingCheckList[index] = isEditing;
   }
 
+  dynamic initColorTheme(Activity activity) {}
+
   @override
   void onClose() {
     for (var controller in checklistTextEditingControllers) {
@@ -62,6 +83,7 @@ class ActivityDetailController extends GetxController {
   String cardPath() => args["card_path"] as String;
   String cardId() => args["card_id"] as String;
   String activityId() => args["activity_id"] as String;
+  Color colorTheme() => args["color_theme"] as Color;
 
   CollectionReference<Checklist> checklistRef() => FirebaseFirestore.instance
       .collection(cardPath())
@@ -135,5 +157,9 @@ class ActivityDetailController extends GetxController {
         ActivityCRUDController.updateDescription(activityRef(), value);
       default:
     }
+  }
+
+  Future<void> updateActivityTimeStamp(DateTimeRange dateTimeRange) async {
+    ActivityCRUDController.updateTimeStamp(activityRef(), dateTimeRange);
   }
 }

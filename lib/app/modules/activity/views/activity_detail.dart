@@ -2,9 +2,11 @@ import 'package:aray/app/data/model/model_activity.dart';
 import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_checklist.dart';
 import 'package:aray/app/modules/activity/controller/controller_activity_detail.dart';
+import 'package:aray/utils/date_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 
 class ActivityDetail extends StatelessWidget {
@@ -47,6 +49,8 @@ class ActivityDetailData extends StatelessWidget {
   Widget build(BuildContext context) {
     final ActivityDetailAnimationController a =
         Get.find<ActivityDetailAnimationController>();
+    // Identify The color scheme
+    a.setColorThemeActivity(c.colorTheme());
     return CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: <Widget>[
@@ -67,17 +71,31 @@ class ActivityDetailData extends StatelessWidget {
                   ],
                 ),
               ]),
-          SliverList(
-            delegate: SliverChildListDelegate([
-              ActivityNameField(activity: activity),
-              ActivityDescriptionField(activity: activity),
-              const ActivityTimeStampField(),
-              ActivityChecklistField(
-                a: a,
-                c: c,
-              ),
-              const ActivityAttachmentField(),
-            ]),
+          Builder(
+            builder: (context) {
+              return Theme(
+                  data: ThemeData(
+                    primaryColor: a.colorThemeActivity.value,
+                    iconTheme: IconThemeData(color: a.colorThemeActivity.value),
+                    inputDecorationTheme: InputDecorationTheme(
+                        focusedBorder: UnderlineInputBorder(
+                            borderSide:
+                                BorderSide(color: a.colorThemeActivity.value))),
+                    // Warna utama
+                  ),
+                  child: SliverList(
+                    delegate: SliverChildListDelegate([
+                      ActivityNameField(activity: activity),
+                      ActivityDescriptionField(activity: activity),
+                      ActivityTimeStampField(activity: activity),
+                      ActivityChecklistField(
+                        a: a,
+                        c: c,
+                      ),
+                      const ActivityAttachmentField(),
+                    ]),
+                  ));
+            },
           )
         ]);
   }
@@ -233,13 +251,15 @@ class ActivityChecklistField extends StatelessWidget {
                 c.updateChecklistStatus(checkTileSnaphsot.id, !isChecked);
               },
               icon: isChecked
-                  ? const Icon(
+                  ? Icon(
                       Icons.check_box,
                       size: 18,
+                      color: a.colorThemeActivity.value,
                     )
-                  : const Icon(
+                  : Icon(
                       Icons.crop_square,
                       size: 18,
+                      color: a.colorThemeActivity.value,
                     )),
           Expanded(
             child: Obx(() {
@@ -254,6 +274,7 @@ class ActivityChecklistField extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: TextField(
+                                  decoration: InputDecoration(),
                                   maxLength: 50,
                                   style: const TextStyle(fontSize: 14),
                                   autofocus: true,
@@ -334,10 +355,24 @@ class ActivityChecklistField extends StatelessWidget {
 class ActivityTimeStampField extends StatelessWidget {
   const ActivityTimeStampField({
     super.key,
+    required this.activity,
   });
+  final Activity activity;
 
   @override
   Widget build(BuildContext context) {
+    final ActivityDetailAnimationController a =
+        Get.find<ActivityDetailAnimationController>();
+
+    final ActivityDetailController c = Get.find<ActivityDetailController>();
+
+    final bool isTimeStamp = activity.timestamp;
+
+    if (isTimeStamp) {
+      a.selectedDateTimeRange.value =
+          DateTimeRange(start: activity.startTime!, end: activity.endTime!);
+    }
+
     return Container(
       padding: const EdgeInsets.all(10),
       margin: const EdgeInsets.only(left: 40, right: 40, bottom: 40),
@@ -349,20 +384,75 @@ class ActivityTimeStampField extends StatelessWidget {
             BoxShadow(
                 color: Colors.grey.withOpacity(0.5), offset: const Offset(0, 2))
           ]),
-      child: const Column(
+      child: Column(
         children: [
           Row(
             children: [
-              Expanded(child: Text("Start Time")),
-              Icon(Icons.calendar_month),
-              Text("12-31-23")
+              Expanded(child: Text("Start Date")),
+              GestureDetector(
+                onTap: () async {
+                  final DateTimeRange? dateTimeRangeSelect =
+                      await showDateRangePicker(
+                          initialDateRange: a.selectedDateTimeRange.value,
+                          context: context,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(3000));
+                  if (dateTimeRangeSelect != null) {
+                    a.selectedDateTimeRange.value = dateTimeRangeSelect;
+                    c.updateActivityTimeStamp(a.selectedDateTimeRange.value);
+                  }
+                },
+                child: isTimeStamp
+                    ? Row(
+                        children: [
+                          Icon(Icons.calendar_month),
+                          Gap(5),
+                          Text(DateHandler.dateFormat(activity.startTime!)),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Icon(Icons.calendar_month),
+                          Gap(5),
+                          Text(
+                            "Add",
+                            style:
+                                TextStyle(color: Colors.black.withOpacity(0.5)),
+                          )
+                        ],
+                      ),
+              ),
+              //
             ],
           ),
+          Gap(5),
           Row(
             children: [
               Expanded(child: Text("Due Date")),
-              Icon(Icons.calendar_month),
-              Text("12-31-23")
+              GestureDetector(
+                onTap: () async {
+                  final DateTimeRange? dateTimeRangeSelect =
+                      await showDateRangePicker(
+                          initialDateRange: a.selectedDateTimeRange.value,
+                          context: context,
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(3000));
+                  if (dateTimeRangeSelect != null) {
+                    a.selectedDateTimeRange.value = dateTimeRangeSelect;
+                    c.updateActivityTimeStamp(a.selectedDateTimeRange.value);
+                  }
+                },
+                child: isTimeStamp
+                    ? Row(
+                        children: [
+                          Icon(Icons.calendar_month),
+                          Gap(5),
+                          Text(DateHandler.dateFormat(activity.endTime!))
+                        ],
+                      )
+                    : Container(),
+              ),
+              //
             ],
           ),
         ],
@@ -431,7 +521,7 @@ class ActivityDescriptionField extends StatelessWidget {
                                     a.isEditingProjectDescription.value =
                                         !isEditing;
                                   },
-                                  child: Text(
+                                  child: const Text(
                                     "Discard",
                                     style: TextStyle(color: Colors.red),
                                   )),
