@@ -20,9 +20,9 @@ class ActivityDetail extends StatelessWidget {
       stream: c.streamActivity(),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return Text("Something went wrong");
+          return const Text("Something went wrong");
         } else if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
+          return const CircularProgressIndicator();
         }
         final activitySnapshot = snapshot.data!;
         final Activity activity = activitySnapshot.data()!;
@@ -58,7 +58,7 @@ class ActivityDetailData extends StatelessWidget {
                   icon: const Icon(CupertinoIcons.ellipsis_vertical),
                   itemBuilder: (BuildContext context) => <PopupMenuEntry>[
                     PopupMenuItem(
-                      child: Text('Delete Activity'),
+                      child: const Text('Delete Activity'),
                       value: 'delete_activity',
                       onTap: () {
                         print("activity deleted");
@@ -71,12 +71,12 @@ class ActivityDetailData extends StatelessWidget {
             delegate: SliverChildListDelegate([
               ActivityNameField(activity: activity),
               ActivityDescriptionField(activity: activity),
-              ActivityTimeStampField(),
+              const ActivityTimeStampField(),
               ActivityChecklistField(
                 a: a,
                 c: c,
               ),
-              ActivityAttachmentField(),
+              const ActivityAttachmentField(),
             ]),
           )
         ]);
@@ -194,9 +194,9 @@ class ActivityChecklistField extends StatelessWidget {
         stream: c.streamChecklist(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Text("Something went wrong");
+            return const Text("Something went wrong");
           } else if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
+            return const CircularProgressIndicator();
           }
 
           final checklistSnapshot = snapshot.data!;
@@ -207,7 +207,6 @@ class ActivityChecklistField extends StatelessWidget {
             final checkTileSnapshot = entry.value;
             // Init textEditingController
             a.initCheckList();
-
             return checkTile(checkTileSnapshot, index);
           }).toList();
 
@@ -250,37 +249,81 @@ class ActivityChecklistField extends StatelessWidget {
                     a.switchIsEditingChecklist(index, !isEditing);
                   },
                   child: isEditing
-                      ? TextField(
-                          autofocus: true,
-                          controller: textEditingController,
-                          onEditingComplete: () {
-                            a.switchIsEditingChecklist(index, !isEditing);
-                            if (textEditingController.text != checkTile.name) {
-                              c.updateCheckListName(checkTileSnaphsot.id,
-                                  textEditingController.text);
-                            }
-                          },
+                      ? Container(
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  maxLength: 50,
+                                  style: const TextStyle(fontSize: 14),
+                                  autofocus: true,
+                                  controller: textEditingController,
+                                  onEditingComplete: () {
+                                    a.switchIsEditingChecklist(
+                                        index, !isEditing);
+                                    if (textEditingController.text !=
+                                        checkTile.name) {
+                                      c.updateCheckListName(
+                                          checkTileSnaphsot.id,
+                                          textEditingController.text);
+                                    }
+                                  },
+                                ),
+                              ),
+                              IconButton(
+                                  onPressed: () {
+                                    a.switchIsEditingChecklist(
+                                        index, !isEditing);
+                                  },
+                                  icon: const Icon(
+                                    CupertinoIcons.clear,
+                                    size: 15,
+                                    color: Colors.red,
+                                  )),
+                              IconButton(
+                                onPressed: () {
+                                  a.switchIsEditingChecklist(index, !isEditing);
+                                  if (textEditingController.text !=
+                                      checkTile.name) {
+                                    c.updateCheckListName(checkTileSnaphsot.id,
+                                        textEditingController.text);
+                                  }
+                                },
+                                icon: const Icon(
+                                  CupertinoIcons.check_mark,
+                                  size: 15,
+                                ),
+                              )
+                            ],
+                          ),
                         )
-                      : Text(checkTile.name));
+                      : Container(
+                          child: Row(
+                          children: [
+                            Expanded(child: Text(checkTile.name)),
+                            PopupMenuButton(
+                              icon: const Icon(
+                                CupertinoIcons.ellipsis_vertical,
+                                size: 14,
+                              ),
+                              itemBuilder: (BuildContext context) =>
+                                  <PopupMenuEntry>[
+                                PopupMenuItem(
+                                  value: 'delete_checklist_in_activity',
+                                  onTap: () {
+                                    c.deleteChecklist(checkTileSnaphsot.id);
+                                  },
+                                  child: const Text(
+                                    'Delete this cheklist',
+                                    style: TextStyle(
+                                        color: Colors.red, fontSize: 13),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        )));
             }),
-          ),
-          PopupMenuButton(
-            icon: const Icon(
-              CupertinoIcons.ellipsis_vertical,
-              size: 14,
-            ),
-            itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-              PopupMenuItem(
-                value: 'delete_checklist_in_activity',
-                onTap: () {
-                  c.deleteChecklist(checkTileSnaphsot.id);
-                },
-                child: const Text(
-                  'Delete this cheklist',
-                  style: TextStyle(color: Colors.red, fontSize: 13),
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -371,26 +414,50 @@ class ActivityDescriptionField extends StatelessWidget {
                 a.isEditingProjectDescription.value = !isEditing;
               },
               child: isEditing
-                  ? TextField(
-                      autofocus: true,
-                      controller: controller,
-                      onEditingComplete: () {
-                        a.isEditingProjectDescription.value = !isEditing;
-                        if (controller.text != activity.description) {
-                          c.updateActivityTextField(
-                              'description', controller.text);
-                        }
-                      },
-                      style: const TextStyle(fontSize: 14),
+                  ? Container(
+                      child: Column(
+                        children: [
+                          TextField(
+                            maxLines: 5,
+                            autofocus: true,
+                            controller: controller,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                  onPressed: () {
+                                    a.isEditingProjectDescription.value =
+                                        !isEditing;
+                                  },
+                                  child: Text(
+                                    "Discard",
+                                    style: TextStyle(color: Colors.red),
+                                  )),
+                              TextButton(
+                                  onPressed: () {
+                                    a.isEditingProjectDescription.value =
+                                        !isEditing;
+                                    if (controller.text !=
+                                        activity.description) {
+                                      c.updateActivityTextField(
+                                          'description', controller.text);
+                                    }
+                                  },
+                                  child: Text("Save"))
+                            ],
+                          )
+                        ],
+                      ),
                     )
                   : Text(
                       activity.description.isEmpty
                           ? "Add Activity Description"
                           : activity.description,
-                      style: const TextStyle(
-                        fontSize: 14,
-                      ),
-                    ),
+                      style: activity.description.isEmpty
+                          ? TextStyle(color: Colors.black.withOpacity(0.5))
+                          : TextStyle(color: Colors.black)),
             );
           }),
         ],
@@ -451,10 +518,10 @@ class ActivityNameField extends StatelessWidget {
               future: c.getCard(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return Text("Something went wrong");
+                  return const Text("Something went wrong");
                 } else if (snapshot.connectionState ==
                     ConnectionState.waiting) {
-                  return CircularProgressIndicator();
+                  return const CircularProgressIndicator();
                 }
                 final CardModel card = snapshot.data!;
                 return Text("In Card '${card.name}'",
