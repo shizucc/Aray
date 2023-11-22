@@ -1,12 +1,17 @@
+import 'dart:io';
+
 import 'package:aray/app/data/model/model_activity.dart';
 import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_checklist.dart';
+import 'package:aray/app/data/model/model_file.dart';
 import 'package:aray/app/modules/activity/controller/crud_controller_activity.dart';
 import 'package:aray/app/modules/activity/controller/crud_controller_checklist.dart';
 import 'package:aray/utils/extension.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:file_picker/file_picker.dart';
 
 class ActivityDetailAnimationController extends GetxController {
   final RxList<TextEditingController> checklistTextEditingControllers =
@@ -23,6 +28,7 @@ class ActivityDetailAnimationController extends GetxController {
   final isEditingProjectStartTime = false.obs;
   final isEditingProjectDueDate = false.obs;
   final isProjectTimeStampFinished = false.obs;
+  final isProjectFilesUploadingProgress = false.obs;
 
   set isEditingProjectName(value) => isEditingProjectName.value = value;
   set isEditingProjectDescription(value) =>
@@ -34,6 +40,9 @@ class ActivityDetailAnimationController extends GetxController {
   set isProjectTimeStampFinished(value) =>
       isProjectTimeStampFinished.value = value;
   set selectedDateTimeRange(value) => selectedDateTimeRange.value = value;
+
+  set isProjectFilesUploadingProgress(value) =>
+      isProjectFilesUploadingProgress.value = value;
 
   void setColorThemeActivity(Color value) {
     if (value.isDark) {
@@ -65,7 +74,16 @@ class ActivityDetailAnimationController extends GetxController {
     isEditingCheckList[index] = isEditing;
   }
 
-  dynamic initColorTheme(Activity activity) {}
+  Future<void> openFilePicker() async {
+    FilePickerResult? result =
+        await FilePicker.platform.pickFiles(allowMultiple: true);
+    if (result != null) {
+      List<File> files = result.paths.map((path) => File(path!)).toList();
+      print(files.first.path);
+    } else {
+      // User canceled the picker
+    }
+  }
 
   @override
   void onClose() {
@@ -103,6 +121,16 @@ class ActivityDetailController extends GetxController {
       .withConverter(
           fromFirestore: (snapshot, _) => Activity.fromJson(snapshot.data()!),
           toFirestore: (Activity activity, _) => activity.toJson());
+
+  CollectionReference<FileModel> activityFileRef() => FirebaseFirestore.instance
+      .collection(cardPath())
+      .doc(cardId())
+      .collection('activity')
+      .doc(activityId())
+      .collection('file')
+      .withConverter(
+          fromFirestore: (snapshot, _) => FileModel.fromJson(snapshot.data()!),
+          toFirestore: (FileModel file, _) => file.toJson());
 
   // Get Card Data
   Future<CardModel> getCard() async {
@@ -161,5 +189,21 @@ class ActivityDetailController extends GetxController {
 
   Future<void> updateActivityTimeStamp(DateTimeRange dateTimeRange) async {
     ActivityCRUDController.updateTimeStamp(activityRef(), dateTimeRange);
+  }
+
+  // Operations for File
+
+  // Stream Files
+  Stream<QuerySnapshot<FileModel>> streamActivityFiles() async* {
+    final Stream<QuerySnapshot<FileModel>> files =
+        activityFileRef().orderBy('created_at').snapshots();
+    yield* files;
+  }
+
+  // Download File from link
+  Future<void> downloadFileFromUrl(Uri url) async {
+    if (!await launchUrl(url)) {
+      throw Exception('Could not launch $url');
+    }
   }
 }

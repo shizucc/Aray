@@ -1,7 +1,9 @@
 import 'package:aray/app/data/model/model_activity.dart';
 import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_checklist.dart';
+import 'package:aray/app/data/model/model_file.dart';
 import 'package:aray/app/modules/activity/controller/controller_activity_detail.dart';
+import 'package:aray/app/modules/projects/controller/controller_project_detail.dart';
 import 'package:aray/utils/date_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
@@ -109,23 +111,33 @@ class ActivityAttachmentField extends StatelessWidget {
   Widget build(BuildContext context) {
     final ActivityDetailAnimationController a =
         Get.find<ActivityDetailAnimationController>();
+    final ActivityDetailController c = Get.find<ActivityDetailController>();
+
     return Container(
       padding: const EdgeInsets.only(left: 40, right: 40),
       child: Column(
         children: [
-          Container(
-            margin: const EdgeInsets.only(top: 20, bottom: 10),
-            child: const Row(
-              children: [
-                Icon(Icons.folder),
-                Text("File"),
-              ],
-            ),
+          Obx(() {
+            final isUploadingProgress = a.isProjectFilesUploadingProgress.value;
+            return Container(
+              margin: const EdgeInsets.only(top: 20, bottom: 10),
+              child: Row(
+                children: [
+                  Icon(Icons.folder),
+                  Gap(3),
+                  Expanded(child: Text("Files")),
+                  isUploadingProgress ? uploadProgressStatus() : Container()
+                ],
+              ),
+            );
+          }),
+          // fileTile(a, c),
+          Column(
+            children: fileList(a, c),
           ),
-          fileTileDump(a),
-          Gap(10),
+          const Gap(10),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
             decoration: BoxDecoration(
                 color: a.colorThemeActivity.value,
                 borderRadius: BorderRadius.circular(15)),
@@ -133,8 +145,10 @@ class ActivityAttachmentField extends StatelessWidget {
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(15),
-                onTap: () {},
-                child: Row(
+                onTap: () async {
+                  a.openFilePicker();
+                },
+                child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
@@ -155,9 +169,53 @@ class ActivityAttachmentField extends StatelessWidget {
     );
   }
 
-  Widget fileTileDump(ActivityDetailAnimationController a) {
+  Widget uploadProgressStatus() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
+      child: Text(
+        "Uploading some files ...",
+        style: TextStyle(
+            fontSize: 13,
+            color: Colors.black.withOpacity(0.5),
+            fontStyle: FontStyle.italic),
+      ),
+    );
+  }
+
+  List<Widget> fileList(
+      ActivityDetailAnimationController a, ActivityDetailController c) {
+    return [
+      StreamBuilder(
+        stream: c.streamActivityFiles(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Text("Something went wrong");
+          } else if (snapshot.connectionState == ConnectionState.waiting) {
+            return const CircularProgressIndicator();
+          }
+          final filesSnapshot = snapshot.data!;
+          final files = filesSnapshot.docs;
+
+          final filesWidgets = files.asMap().entries.map((entry) {
+            final index = entry.key;
+            final fileSnapshot = entry.value;
+            return fileTile(a, c, fileSnapshot);
+          }).toList();
+
+          return Column(
+            children: filesWidgets,
+          );
+        },
+      ),
+    ];
+  }
+
+  Widget fileTile(
+      ActivityDetailAnimationController a,
+      ActivityDetailController c,
+      QueryDocumentSnapshot<FileModel> fileSnapshot) {
+    final FileModel file = fileSnapshot.data();
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -178,12 +236,30 @@ class ActivityAttachmentField extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text("File Tugas.zip"),
-                    Text(
-                      "Ditambahkan: 12-31-12",
-                      style: TextStyle(
-                          fontSize: 13, color: Colors.black.withOpacity(0.5)),
-                    )
+                    Row(
+                      children: [
+                        Icon(
+                          CupertinoIcons.doc,
+                          size: 14,
+                        ),
+                        Gap(3),
+                        Text(file.name),
+                      ],
+                    ),
+                    Gap(5),
+                    Row(
+                      children: [
+                        Icon(
+                          CupertinoIcons.clock,
+                          size: 13,
+                        ),
+                        Gap(3),
+                        Text(DateHandler.dateAndTimeFormat(file.createdAt),
+                            style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.black.withOpacity(0.5)))
+                      ],
+                    ),
                   ],
                 ),
               ),

@@ -50,6 +50,8 @@ dependencies:
   path_provider: ^2.1.1
   flutter_image_compress: ^2.1.0
   syncfusion_flutter_datepicker: ^23.2.4
+  url_launcher: ^6.2.1
+  file_picker: ^6.1.1
 
 dev_dependencies:
   flutter_test:
