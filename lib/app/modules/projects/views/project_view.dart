@@ -270,6 +270,7 @@ class ProjectActivities extends StatelessWidget {
                           onTap: () {
                             Get.toNamed("/activity/detail", arguments: {
                               "color_theme": a.colorTheme.value,
+                              "project_id": projectId,
                               "card_id": cardSnapshot.id,
                               "card_path": c.cardPath.value,
                               "activity_id": activitySnapshot.id,

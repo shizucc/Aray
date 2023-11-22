@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 
 extension HexColor on Color {
   bool get isDark {
@@ -16,5 +17,16 @@ extension DarkenColorExtension on Color {
     int blue = (this.blue * (1.0 - factor)).round();
 
     return Color.fromARGB(alpha, red, green, blue);
+  }
+}
+
+extension FileExtension on File {
+  Future<bool> isFileSizeBelowMax(int maxFileSizeInMegabytes) async {
+    if (await exists()) {
+      int maxFileSizeInBytes = maxFileSizeInMegabytes * 1024 * 1024;
+      int fileSizeInBytes = await length();
+      return fileSizeInBytes <= maxFileSizeInBytes;
+    }
+    return false;
   }
 }

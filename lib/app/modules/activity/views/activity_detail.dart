@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:aray/app/data/model/model_activity.dart';
 import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_checklist.dart';
@@ -118,14 +119,14 @@ class ActivityAttachmentField extends StatelessWidget {
       child: Column(
         children: [
           Obx(() {
-            final isUploadingProgress = a.isProjectFilesUploadingProgress.value;
+            final isUploadingProgress = c.isProjectFilesUploadingProgress.value;
             return Container(
               margin: const EdgeInsets.only(top: 20, bottom: 10),
               child: Row(
                 children: [
-                  Icon(Icons.folder),
-                  Gap(3),
-                  Expanded(child: Text("Files")),
+                  const Icon(Icons.folder),
+                  const Gap(3),
+                  const Expanded(child: Text("Files")),
                   isUploadingProgress ? uploadProgressStatus() : Container()
                 ],
               ),
@@ -146,7 +147,9 @@ class ActivityAttachmentField extends StatelessWidget {
               child: InkWell(
                 borderRadius: BorderRadius.circular(15),
                 onTap: () async {
-                  a.openFilePicker();
+                  await c.openFilePicker();
+                  final List<File> files = c.activityFiles;
+                  c.uploadActivityFiles(files);
                 },
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
@@ -214,6 +217,7 @@ class ActivityAttachmentField extends StatelessWidget {
       ActivityDetailController c,
       QueryDocumentSnapshot<FileModel> fileSnapshot) {
     final FileModel file = fileSnapshot.data();
+    final String fileId = fileSnapshot.id;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -225,35 +229,39 @@ class ActivityAttachmentField extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Gap(10),
+          Container(
+            child: const Icon(
+              CupertinoIcons.doc,
+              size: 14,
+            ),
+          ),
+          const Gap(10),
           Expanded(
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: () {
-                  print("Hello");
+                  c.downloadActivityFile(Uri.parse(file.url));
                 },
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
                       children: [
-                        Icon(
-                          CupertinoIcons.doc,
-                          size: 14,
+                        const Gap(3),
+                        Text(
+                          file.name,
                         ),
-                        Gap(3),
-                        Text(file.name),
                       ],
                     ),
-                    Gap(5),
+                    const Gap(5),
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           CupertinoIcons.clock,
                           size: 13,
                         ),
-                        Gap(3),
+                        const Gap(3),
                         Text(DateHandler.dateAndTimeFormat(file.createdAt),
                             style: TextStyle(
                                 fontSize: 13,
@@ -266,7 +274,7 @@ class ActivityAttachmentField extends StatelessWidget {
             ),
           ),
           PopupMenuButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.more_vert,
               size: 16,
             ),
@@ -275,7 +283,44 @@ class ActivityAttachmentField extends StatelessWidget {
                 child: const Text('Delete this file'),
                 value: 'delete_file',
                 onTap: () {
-                  print("activity deleted");
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                          actions: [
+                            TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                child: const Text("Cancel")),
+                            TextButton(
+                                onPressed: () {
+                                  c.deleteActivityFile(fileId, file);
+                                  Navigator.pop(context);
+                                },
+                                child: const Text(
+                                  "Delete",
+                                  style: TextStyle(color: Colors.red),
+                                ))
+                          ],
+                          title:
+                              const Text("Are you sure to delete this file?"),
+                          content: Container(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    file.name,
+                                    style: TextStyle(
+                                        color: Colors.black.withOpacity(0.5)),
+                                  ),
+                                  const Gap(5),
+                                  const Text("This action cannot be undone")
+                                ]),
+                          ));
+                    },
+                  );
                 },
               ),
             ],
@@ -398,7 +443,7 @@ class ActivityChecklistField extends StatelessWidget {
                             children: [
                               Expanded(
                                 child: TextField(
-                                  decoration: InputDecoration(),
+                                  decoration: const InputDecoration(),
                                   maxLength: 50,
                                   style: const TextStyle(fontSize: 14),
                                   autofocus: true,
@@ -456,7 +501,51 @@ class ActivityChecklistField extends StatelessWidget {
                                 PopupMenuItem(
                                   value: 'delete_checklist_in_activity',
                                   onTap: () {
-                                    c.deleteChecklist(checkTileSnaphsot.id);
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) {
+                                        return AlertDialog(
+                                            actions: [
+                                              TextButton(
+                                                  onPressed: () {
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text("Cancel")),
+                                              TextButton(
+                                                  onPressed: () {
+                                                    c.deleteChecklist(
+                                                        checkTileSnaphsot.id);
+                                                    Navigator.pop(context);
+                                                  },
+                                                  child: const Text(
+                                                    "Delete",
+                                                    style: TextStyle(
+                                                        color: Colors.red),
+                                                  ))
+                                            ],
+                                            title: const Text(
+                                                "Are you sure to delete this checklist?"),
+                                            content: Container(
+                                              child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Text(
+                                                      checkTile.name,
+                                                      style: TextStyle(
+                                                          color: Colors.black
+                                                              .withOpacity(
+                                                                  0.5)),
+                                                    ),
+                                                    const Gap(5),
+                                                    const Text(
+                                                        "This action cannot be undone")
+                                                  ]),
+                                            ));
+                                      },
+                                    );
                                   },
                                   child: const Text(
                                     'Delete this cheklist',
@@ -512,7 +601,7 @@ class ActivityTimeStampField extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text("Start Date")),
+              const Expanded(child: Text("Start Date")),
               GestureDetector(
                 onTap: () async {
                   final DateTimeRange? dateTimeRangeSelect =
@@ -529,15 +618,15 @@ class ActivityTimeStampField extends StatelessWidget {
                 child: isTimeStamp
                     ? Row(
                         children: [
-                          Icon(Icons.calendar_month),
-                          Gap(5),
+                          const Icon(Icons.calendar_month),
+                          const Gap(5),
                           Text(DateHandler.dateFormat(activity.startTime!)),
                         ],
                       )
                     : Row(
                         children: [
-                          Icon(Icons.calendar_month),
-                          Gap(5),
+                          const Icon(Icons.calendar_month),
+                          const Gap(5),
                           Text(
                             "Add",
                             style:
@@ -549,10 +638,10 @@ class ActivityTimeStampField extends StatelessWidget {
               //
             ],
           ),
-          Gap(5),
+          const Gap(5),
           Row(
             children: [
-              Expanded(child: Text("Due Date")),
+              const Expanded(child: Text("Due Date")),
               GestureDetector(
                 onTap: () async {
                   final DateTimeRange? dateTimeRangeSelect =
@@ -569,8 +658,8 @@ class ActivityTimeStampField extends StatelessWidget {
                 child: isTimeStamp
                     ? Row(
                         children: [
-                          Icon(Icons.calendar_month),
-                          Gap(5),
+                          const Icon(Icons.calendar_month),
+                          const Gap(5),
                           Text(DateHandler.dateFormat(activity.endTime!))
                         ],
                       )
@@ -659,7 +748,7 @@ class ActivityDescriptionField extends StatelessWidget {
                                           'description', controller.text);
                                     }
                                   },
-                                  child: Text("Save"))
+                                  child: const Text("Save"))
                             ],
                           )
                         ],
@@ -671,7 +760,7 @@ class ActivityDescriptionField extends StatelessWidget {
                           : activity.description,
                       style: activity.description.isEmpty
                           ? TextStyle(color: Colors.black.withOpacity(0.5))
-                          : TextStyle(color: Colors.black)),
+                          : const TextStyle(color: Colors.black)),
             );
           }),
         ],

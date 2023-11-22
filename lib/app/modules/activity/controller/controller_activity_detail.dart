@@ -5,12 +5,14 @@ import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_checklist.dart';
 import 'package:aray/app/data/model/model_file.dart';
 import 'package:aray/app/modules/activity/controller/crud_controller_activity.dart';
+import 'package:aray/app/modules/activity/controller/crud_controller_activity_file.dart';
 import 'package:aray/app/modules/activity/controller/crud_controller_checklist.dart';
 import 'package:aray/utils/extension.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:url_launcher/url_launcher.dart';
+
 import 'package:file_picker/file_picker.dart';
 
 class ActivityDetailAnimationController extends GetxController {
@@ -23,12 +25,13 @@ class ActivityDetailAnimationController extends GetxController {
   ).obs;
   final Rx<Color> colorThemeActivity = const Color(0x00000000).obs;
 
+  // Variabel for handling Activiy Files
+
   final isEditingProjectName = false.obs;
   final isEditingProjectDescription = false.obs;
   final isEditingProjectStartTime = false.obs;
   final isEditingProjectDueDate = false.obs;
   final isProjectTimeStampFinished = false.obs;
-  final isProjectFilesUploadingProgress = false.obs;
 
   set isEditingProjectName(value) => isEditingProjectName.value = value;
   set isEditingProjectDescription(value) =>
@@ -40,9 +43,6 @@ class ActivityDetailAnimationController extends GetxController {
   set isProjectTimeStampFinished(value) =>
       isProjectTimeStampFinished.value = value;
   set selectedDateTimeRange(value) => selectedDateTimeRange.value = value;
-
-  set isProjectFilesUploadingProgress(value) =>
-      isProjectFilesUploadingProgress.value = value;
 
   void setColorThemeActivity(Color value) {
     if (value.isDark) {
@@ -74,17 +74,6 @@ class ActivityDetailAnimationController extends GetxController {
     isEditingCheckList[index] = isEditing;
   }
 
-  Future<void> openFilePicker() async {
-    FilePickerResult? result =
-        await FilePicker.platform.pickFiles(allowMultiple: true);
-    if (result != null) {
-      List<File> files = result.paths.map((path) => File(path!)).toList();
-      print(files.first.path);
-    } else {
-      // User canceled the picker
-    }
-  }
-
   @override
   void onClose() {
     for (var controller in checklistTextEditingControllers) {
@@ -98,10 +87,17 @@ class ActivityDetailController extends GetxController {
   final args = <String, dynamic>{}.obs;
   set args(value) => args.value = value;
 
+  final RxList<File> activityFiles = <File>[].obs;
+  final isProjectFilesUploadingProgress = false.obs;
+
   String cardPath() => args["card_path"] as String;
   String cardId() => args["card_id"] as String;
   String activityId() => args["activity_id"] as String;
+  String projectId() => args["project_id"] as String;
   Color colorTheme() => args["color_theme"] as Color;
+
+  set isProjectFilesUploadingProgress(value) =>
+      isProjectFilesUploadingProgress.value = value;
 
   CollectionReference<Checklist> checklistRef() => FirebaseFirestore.instance
       .collection(cardPath())
@@ -132,6 +128,9 @@ class ActivityDetailController extends GetxController {
           fromFirestore: (snapshot, _) => FileModel.fromJson(snapshot.data()!),
           toFirestore: (FileModel file, _) => file.toJson());
 
+  Reference activityStorageRef() => FirebaseStorage.instance.ref().child(
+      'user/public/projects/project_${projectId()}/activity_${activityId()}');
+
   // Get Card Data
   Future<CardModel> getCard() async {
     final cardRef = FirebaseFirestore.instance
@@ -144,6 +143,17 @@ class ActivityDetailController extends GetxController {
     final cardSnaphsot = await cardRef.get();
     final CardModel card = cardSnaphsot.data()!;
     return card;
+  }
+
+  Future<void> openFilePicker() async {
+    FilePickerResult? result =
+        await FilePicker.platform.pickFiles(allowMultiple: true);
+    if (result != null) {
+      List<File> files = result.paths.map((path) => File(path!)).toList();
+      activityFiles.value = files;
+    } else {
+      // User canceled the picker
+    }
   }
 
   // Operation for Checklist
@@ -201,9 +211,31 @@ class ActivityDetailController extends GetxController {
   }
 
   // Download File from link
-  Future<void> downloadFileFromUrl(Uri url) async {
-    if (!await launchUrl(url)) {
-      throw Exception('Could not launch $url');
+  Future<void> downloadActivityFile(Uri uri) async {
+    await ActivityFileCRUDController.download(uri);
+  }
+
+  // Upload Files
+  Future<void> uploadActivityFiles(List<File> files) async {
+    if (files.isNotEmpty) {
+      final Reference activityFilesStorageRef =
+          activityStorageRef().child('/files/');
+      isProjectFilesUploadingProgress.value = true;
+      await ActivityFileCRUDController.uploadFiles(
+          files, activityFileRef(), activityFilesStorageRef);
+      isProjectFilesUploadingProgress.value = false;
+
+      // if uploading complete,set the activityfiles to zero to prevent endless upload
+      activityFiles.value = [];
     }
+  }
+
+  // Delete Files
+  Future<void> deleteActivityFile(String id, FileModel file) async {
+    final String fileName = file.name;
+    final Reference activityFileStorageRef =
+        activityStorageRef().child('/files/$fileName');
+    await ActivityFileCRUDController.deleteFile(
+        id, activityFileStorageRef, activityFileRef());
   }
 }
