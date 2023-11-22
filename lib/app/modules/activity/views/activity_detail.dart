@@ -92,7 +92,7 @@ class ActivityDetailData extends StatelessWidget {
                         a: a,
                         c: c,
                       ),
-                      const ActivityAttachmentField(),
+                      ActivityAttachmentField(activity: activity),
                     ]),
                   ));
             },
@@ -102,62 +102,110 @@ class ActivityDetailData extends StatelessWidget {
 }
 
 class ActivityAttachmentField extends StatelessWidget {
-  const ActivityAttachmentField({
-    super.key,
-  });
+  const ActivityAttachmentField({super.key, required this.activity});
+  final Activity activity;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          margin: const EdgeInsets.only(left: 50, bottom: 10, top: 20),
-          child: const Row(
-            children: [
-              Icon(Icons.folder),
-              Text("File"),
-            ],
+    final ActivityDetailAnimationController a =
+        Get.find<ActivityDetailAnimationController>();
+    return Container(
+      padding: const EdgeInsets.only(left: 40, right: 40),
+      child: Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 20, bottom: 10),
+            child: const Row(
+              children: [
+                Icon(Icons.folder),
+                Text("File"),
+              ],
+            ),
           ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(10),
-          margin: const EdgeInsets.only(left: 40, right: 40),
-          decoration: BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.rectangle,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
-                    offset: const Offset(0, 2))
-              ]),
-          child: Column(children: [
-            const Row(
-              children: [
-                Text("File Tugas.zip"),
-                Icon(
-                  Icons.file_copy_rounded,
-                  size: 15,
+          fileTileDump(a),
+          Gap(10),
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            decoration: BoxDecoration(
+                color: a.colorThemeActivity.value,
+                borderRadius: BorderRadius.circular(15)),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(15),
+                onTap: () {},
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.add,
+                      color: Colors.white,
+                    ),
+                    Text(
+                      "Add Attachment",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
                 ),
-                Expanded(child: Icon(Icons.more_vert)),
-              ],
+              ),
             ),
-            Row(
-              children: [
-                Text(
-                  "Ditambahkan: 12-31-12",
-                  style: TextStyle(
-                      fontSize: 13, color: Colors.black.withOpacity(0.5)),
-                )
-              ],
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget fileTileDump(ActivityDetailAnimationController a) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: a.colorThemeActivity.value),
+        shape: BoxShape.rectangle,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Gap(10),
+          Expanded(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  print("Hello");
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("File Tugas.zip"),
+                    Text(
+                      "Ditambahkan: 12-31-12",
+                      style: TextStyle(
+                          fontSize: 13, color: Colors.black.withOpacity(0.5)),
+                    )
+                  ],
+                ),
+              ),
             ),
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [Icon(Icons.add), Text("Add Attachement")],
-            )
-          ]),
-        )
-      ],
+          ),
+          PopupMenuButton(
+            icon: Icon(
+              Icons.more_vert,
+              size: 16,
+            ),
+            itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+              PopupMenuItem(
+                child: const Text('Delete this file'),
+                value: 'delete_file',
+                onTap: () {
+                  print("activity deleted");
+                },
+              ),
+            ],
+          )
+        ],
+      ),
     );
   }
 }
