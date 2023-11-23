@@ -18,6 +18,7 @@ class ActivityCoverCRUDController {
   // Cloud File Storage Handling
   static Future<void> uploadCover(DocumentReference<Activity> activityRef,
       Reference activityCoverStorageRef, File file) async {
+    print(activityRef.id);
     try {
       final String fileName = file.path.split('/').last;
       final Reference activityCoverUploadStorageRef =
@@ -38,6 +39,7 @@ class ActivityCoverCRUDController {
     Reference activityCoverStorageRef,
   ) async {
     try {
+      print(activityCoverStorageRef);
       await activityCoverStorageRef.delete();
       await delete(activityRef);
     } catch (e) {}

@@ -37,7 +37,7 @@ class Activity {
       return Activity.withTimestamp(
           name: json['name'] as String,
           description: json['description'] as String,
-          coverName: json['cover_image'] ?? '',
+          coverName: json['cover_name'] ?? '',
           coverUrl: json['cover_url'] ?? '',
           startTime: (json['start_time'] as Timestamp).toDate(),
           endTime: (json['end_time'] as Timestamp).toDate(),
@@ -48,7 +48,7 @@ class Activity {
       return Activity.withoutTimestamp(
           name: json['name'] as String,
           description: json['description'] as String,
-          coverName: json['cover_image'] ?? '',
+          coverName: json['cover_name'] ?? '',
           coverUrl: json['cover_url'] ?? '',
           files: json['files'] ?? [],
           timestamp: timestamp,

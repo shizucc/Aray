@@ -5,7 +5,6 @@ import 'package:aray/app/data/model/model_checklist.dart';
 import 'package:aray/app/data/model/model_file.dart';
 import 'package:aray/app/global_widgets/my_text_button_icon.dart';
 import 'package:aray/app/modules/activity/controller/controller_activity_detail.dart';
-import 'package:aray/app/modules/projects/controller/controller_project_detail.dart';
 import 'package:aray/utils/date_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
@@ -58,7 +57,7 @@ class ActivityDetailData extends StatelessWidget {
     a.setColorThemeActivity(c.colorTheme());
 
     // Get value of use image or not
-    final bool isUseCoverImage = activity.coverName.isNotEmpty;
+    final bool isUseCoverImage = activity.coverName != '';
     return CustomScrollView(
         physics: const BouncingScrollPhysics(),
         slivers: <Widget>[
@@ -66,49 +65,63 @@ class ActivityDetailData extends StatelessWidget {
               expandedHeight: 200.0,
               flexibleSpace: FlexibleSpaceBar(
                   background: Container(
-                decoration: isUseCoverImage
+                decoration: !isUseCoverImage
                     ? BoxDecoration(
                         color: a.colorThemeActivity.value.withOpacity(0.5))
                     : null,
-                child: Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    // const Placeholder(),
-                    isUseCoverImage
-                        ? Image.network(activity.coverUrl)
-                        : Container(),
-                    isUseCoverImage
-                        ? MyTextButtonIcon(
-                            label: "Add Cover",
-                            labelTextStyle: TextStyle(color: Colors.white),
-                            icon: const Icon(
-                              CupertinoIcons.add,
-                              size: 13,
-                              color: Colors.white,
+                child: Obx(() {
+                  final bool isUploadCoverProgress =
+                      c.isActivityCoverUploadingProgress.value;
+                  return Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
+                      isUseCoverImage
+                          ? Image.network(
+                              activity.coverUrl,
+                              width: Get.width,
+                              fit: BoxFit.cover,
+                            )
+                          : Container(),
+                      !isUseCoverImage
+                          ? MyTextButtonIcon(
+                              label: "Add Cover",
+                              labelTextStyle: TextStyle(color: Colors.white),
+                              icon: const Icon(
+                                CupertinoIcons.add,
+                                size: 13,
+                                color: Colors.white,
+                              ),
+                              backgroundColor: Colors.black.withOpacity(0.3),
+                              onTap: () async {
+                                final XFile? image = await c.openImagePicker();
+                                await c.uploadActivityCover(image!);
+                              },
+                            )
+                          : MyTextButtonIcon(
+                              label: "Delete Cover",
+                              labelTextStyle: TextStyle(
+                                  color: Colors.black.withOpacity(0.8)),
+                              icon: Icon(
+                                CupertinoIcons.trash,
+                                size: 13,
+                                color: Colors.black.withOpacity(0.8),
+                              ),
+                              backgroundColor:
+                                  const Color(0xffFF8383).withOpacity(0.5),
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) =>
+                                      deleteCoverAlertDialog(context),
+                                );
+                              },
                             ),
-                            backgroundColor: Colors.black.withOpacity(0.3),
-                            onTap: () async {
-                              final XFile? image = await c.openImagePicker();
-                              await c.uploadActivityCover(image!);
-                            },
-                          )
-                        : MyTextButtonIcon(
-                            label: "Delete Cover",
-                            icon: const Icon(
-                              CupertinoIcons.trash,
-                              size: 13,
-                            ),
-                            backgroundColor: const Color(0xffFF8383),
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) =>
-                                    deleteCoverAlertDialog(context),
-                              );
-                            },
-                          ),
-                  ],
-                ),
+                      isUploadCoverProgress
+                          ? uploadProgressStatus()
+                          : Container(),
+                    ],
+                  );
+                }),
               )),
               actions: [
                 PopupMenuButton(
@@ -138,7 +151,7 @@ class ActivityDetailData extends StatelessWidget {
                   ),
                   child: SliverList(
                     delegate: SliverChildListDelegate([
-                      Gap(10),
+                      const Gap(10),
                       ActivityNameField(activity: activity),
                       ActivityDescriptionField(activity: activity),
                       ActivityTimeStampField(activity: activity),
@@ -152,6 +165,20 @@ class ActivityDetailData extends StatelessWidget {
             },
           )
         ]);
+  }
+
+  Widget uploadProgressStatus() {
+    return Container(
+      margin: const EdgeInsets.only(left: 20, bottom: 10),
+      width: Get.width,
+      child: Text(
+        "Uploading cover image ...",
+        style: TextStyle(
+            fontSize: 13,
+            color: Colors.black.withOpacity(0.5),
+            fontStyle: FontStyle.italic),
+      ),
+    );
   }
 
   AlertDialog deleteCoverAlertDialog(BuildContext context) {
