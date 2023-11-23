@@ -3,6 +3,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class ActivityCRUDController {
+  static Future<void> addNew(
+      CollectionReference<Activity> activitiesRef, Activity activity) async {
+    await activitiesRef.add(activity);
+  }
+
   static Future<void> updateName(
       DocumentReference<Activity> reference, String name) async {
     await reference.update({'name': name});

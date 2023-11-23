@@ -147,9 +147,9 @@ class WorskpaceList extends StatelessWidget {
                                                       arguments: {
                                                         "project":
                                                             project.data(),
-                                                        "workspaceId":
+                                                        "workspace_id":
                                                             workspace.id,
-                                                        "projectId": project.id
+                                                        "project_id": project.id
                                                       });
                                                 });
                                           }).toList(),

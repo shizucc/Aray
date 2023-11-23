@@ -19,7 +19,7 @@ class Activity {
       this.startTime,
       this.endTime,
       this.files,
-      required this.timestamp,
+      this.timestamp = true,
       required this.order});
 
   Activity.withoutTimestamp(
@@ -28,7 +28,7 @@ class Activity {
       required this.name,
       this.description = '',
       this.files,
-      required this.timestamp,
+      this.timestamp = false,
       required this.order});
 
   factory Activity.fromJson(Map<String, dynamic> json) {
@@ -42,7 +42,7 @@ class Activity {
           startTime: (json['start_time'] as Timestamp).toDate(),
           endTime: (json['end_time'] as Timestamp).toDate(),
           files: json['files'] ?? [],
-          timestamp: timestamp,
+          timestamp: true,
           order: json['order'] as int);
     } else {
       return Activity.withoutTimestamp(
@@ -51,7 +51,7 @@ class Activity {
           coverName: json['cover_name'] ?? '',
           coverUrl: json['cover_url'] ?? '',
           files: json['files'] ?? [],
-          timestamp: timestamp,
+          timestamp: false,
           order: json['order'] as int);
     }
   }

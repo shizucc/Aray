@@ -2,13 +2,15 @@ import 'package:aray/app/data/model/model_activity.dart';
 import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_color_theme.dart';
 import 'package:aray/app/data/model/model_project.dart';
+import 'package:aray/app/modules/activity/controller/crud_controller_activity.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
 class ProjectAnimationController extends GetxController {
   final Rx<Color> colorTheme = const Color(0x00000000).obs;
-
+  final Rx<Color> cardColor =
+      Color.fromRGBO(241, 239, 239, 1).withOpacity(0.95).obs;
   set colorTheme(value) => colorTheme.value = value;
   Color getColorTheme(Project project) {
     final bool isUseImage = project.personalize['use_image'] as bool;
@@ -27,47 +29,53 @@ class ProjectAnimationController extends GetxController {
 }
 
 class ProjectController extends GetxController {
+  final args = <String, dynamic>{}.obs;
+  set args(value) => args.value = value;
+
   final RxString cardPath = ''.obs;
   final RxString activityPath = ''.obs;
+
+  String projectId() => args['project_id'] ?? "";
+  String workspaceId() => args['workspace_id'] ?? "";
+  Project projectDump() => args['project'];
 
   Map<String, String> activitiesPath = {};
 
   // Stream 1 project
-  Stream<DocumentSnapshot<Project>> streamProject(
-      String workspaceId, String projectId) async* {
-    final projectRef = FirebaseFirestore.instance
-        .collection('workspace')
-        .doc(workspaceId)
-        .collection('project')
-        .doc(projectId)
-        .withConverter(
-            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
-            toFirestore: (Project project, _) => project.toJson());
+  DocumentReference<Project> projectRef() => FirebaseFirestore.instance
+      .collection('workspace')
+      .doc(workspaceId())
+      .collection('project')
+      .doc(projectId())
+      .withConverter(
+          fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
+          toFirestore: (Project project, _) => project.toJson());
 
-    final Stream<DocumentSnapshot<Project>> project = projectRef.snapshots();
+  CollectionReference<CardModel> cardsRef() => FirebaseFirestore.instance
+      .collection('workspace')
+      .doc(workspaceId())
+      .collection('project')
+      .doc(projectId())
+      .collection('card')
+      .withConverter(
+          fromFirestore: (snapshot, _) => CardModel.fromJson(snapshot.data()!),
+          toFirestore: (CardModel card, _) => card.toJson());
+
+  // Stream one project
+  Stream<DocumentSnapshot<Project>> streamProject() async* {
+    final Stream<DocumentSnapshot<Project>> project = projectRef().snapshots();
     yield* project;
   }
 
   // Stream semua card
-  Stream<QuerySnapshot<CardModel>> streamCards(
-      String projectId, String workspaceId) async* {
-    final cardRef = FirebaseFirestore.instance
-        .collection('workspace')
-        .doc(workspaceId)
-        .collection('project')
-        .doc(projectId)
-        .collection('card')
-        .withConverter(
-            fromFirestore: (snapshot, _) =>
-                CardModel.fromJson(snapshot.data()!),
-            toFirestore: (CardModel card, _) => card.toJson());
-    final Stream<QuerySnapshot<CardModel>> listCard =
-        cardRef.orderBy('order').snapshots();
-    cardPath.value = cardRef.path;
-    yield* listCard;
+  Stream<QuerySnapshot<CardModel>> streamCards() async* {
+    final Stream<QuerySnapshot<CardModel>> cards =
+        cardsRef().orderBy('order').snapshots();
+    cardPath.value = cardsRef().path;
+    yield* cards;
   }
 
-  // Stream Activity dengan parameter satu card
+  // Stream Activities dengan parameter satu card
   Stream<QuerySnapshot<Activity>> streamActivities(String cardId) async* {
     final activityRef = FirebaseFirestore.instance
         .collection(cardPath.value)
@@ -82,9 +90,27 @@ class ProjectController extends GetxController {
     yield* listActivity;
   }
 
+  // Stream Activity with id card and id Activity
+  Stream<DocumentSnapshot<Activity>> streamActivity(
+      String cardId, String activityId) async* {
+    final activityRef = FirebaseFirestore.instance
+        .collection(cardPath.value)
+        .doc(cardId)
+        .collection('activity')
+        .doc(activityId)
+        .withConverter(
+            fromFirestore: (snapshot, _) => Activity.fromJson(snapshot.data()!),
+            toFirestore: (Activity activity, _) => activity.toJson());
+    final activity = activityRef.snapshots();
+    yield* activity;
+  }
+
   // Reorder Activity
   Future<void> reorderActivity(
-      String cardId, int oldIndex, int newIndex) async {
+      String cardId,
+      List<QueryDocumentSnapshot<Activity>> activitiesSnapshot,
+      int oldIndex,
+      int newIndex) async {
     final activityRef = FirebaseFirestore.instance
         .collection(cardPath.value)
         .doc(cardId)
@@ -93,10 +119,7 @@ class ProjectController extends GetxController {
             fromFirestore: (snapshot, _) => Activity.fromJson(snapshot.data()!),
             toFirestore: (Activity activity, _) => activity.toJson());
 
-    final QuerySnapshot<Activity> activitiesSnapshot =
-        await activityRef.orderBy('order').get();
-
-    final documents = activitiesSnapshot.docs;
+    final documents = activitiesSnapshot;
     if (oldIndex < newIndex) {
       for (int i = oldIndex; i < newIndex && i < documents.length - 1; i++) {
         final previousItem = documents[i];
@@ -110,6 +133,45 @@ class ProjectController extends GetxController {
         final item = documents[i - 1];
         activityRef.doc(item.id).update({'order': i});
         activityRef.doc(previousItem.id).update({'order': i - 1});
+      }
+    }
+  }
+
+  // Add New Activity
+  Future<void> addNewActivity(String cardId, String activityName) async {
+    final CollectionReference<Activity> activitiesRef = cardsRef()
+        .doc(cardId)
+        .collection('activity')
+        .withConverter(
+            fromFirestore: (snapshot, _) => Activity.fromJson(snapshot.data()!),
+            toFirestore: (Activity activity, _) => activity.toJson());
+
+    // Get the total of Activity
+    final activitiesSnapshot = await activitiesRef.get();
+    final activitiesLength = activitiesSnapshot.docs.length;
+    final Activity activity = Activity.withoutTimestamp(
+        name: activityName, order: activitiesLength - 1);
+    await ActivityCRUDController.addNew(activitiesRef, activity);
+  }
+
+  Future<void> reorderCard(
+      List<QueryDocumentSnapshot<CardModel>> cardsQuerySnapshot,
+      int oldIndex,
+      int newIndex) async {
+    final documents = cardsQuerySnapshot;
+    if (oldIndex < newIndex) {
+      for (int i = oldIndex; i < newIndex && i < documents.length - 1; i++) {
+        final previousItem = documents[i];
+        final item = documents[i + 1];
+        cardsRef().doc(item.id).update({'order': i});
+        cardsRef().doc(previousItem.id).update({'order': i + 1});
+      }
+    } else {
+      for (int i = oldIndex; i > newIndex; i--) {
+        final previousItem = documents[i];
+        final item = documents[i - 1];
+        cardsRef().doc(item.id).update({'order': i});
+        cardsRef().doc(previousItem.id).update({'order': i - 1});
       }
     }
   }

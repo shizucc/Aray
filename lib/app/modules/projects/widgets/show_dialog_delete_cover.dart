@@ -1,6 +1,5 @@
 import 'package:aray/app/modules/projects/controller/controller_project_detail.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class DialogDeleteProjectCover extends StatelessWidget {
   const DialogDeleteProjectCover({super.key, required this.c});

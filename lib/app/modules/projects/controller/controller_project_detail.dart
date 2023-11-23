@@ -3,15 +3,14 @@ import 'dart:io';
 
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
-import 'package:aray/app/modules/projects/controller/global_controller_project_detail.dart';
+
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:aray/utils/extension.dart';
+
 import 'package:palette_generator/palette_generator.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 
 enum Personalize { defaultTheme, customImage }
 
