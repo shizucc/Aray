@@ -219,9 +219,19 @@ class ActivityDetailController extends GetxController {
 
     final File coverFile = File(file.path);
     isActivityCoverUploadingProgress.value = true;
-    await ActivityCoverCRUDController.upload(
+    await ActivityCoverCRUDController.uploadCover(
         activityRef(), activityCoverStorageRef, coverFile);
     isActivityCoverUploadingProgress.value = false;
+  }
+
+  Future<void> deleteActivityCover(
+    Activity activity,
+  ) async {
+    final String coverName = activity.coverName;
+    final Reference activityCoverStorageRef =
+        activityStorageRef().child('/cover/$coverName');
+    await ActivityCoverCRUDController.deleteCover(
+        activityRef(), activityCoverStorageRef);
   }
 
   // Operations for File

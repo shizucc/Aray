@@ -75,6 +75,9 @@ class ActivityDetailData extends StatelessWidget {
                   children: [
                     // const Placeholder(),
                     isUseCoverImage
+                        ? Image.network(activity.coverUrl)
+                        : Container(),
+                    isUseCoverImage
                         ? MyTextButtonIcon(
                             label: "Add Cover",
                             labelTextStyle: TextStyle(color: Colors.white),
@@ -160,7 +163,8 @@ class ActivityDetailData extends StatelessWidget {
               },
               child: const Text("Cancel")),
           TextButton(
-              onPressed: () {
+              onPressed: () async {
+                c.deleteActivityCover(activity);
                 Navigator.pop(context);
               },
               child: const Text(
