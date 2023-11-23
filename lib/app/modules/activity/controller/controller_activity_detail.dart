@@ -5,6 +5,7 @@ import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_checklist.dart';
 import 'package:aray/app/data/model/model_file.dart';
 import 'package:aray/app/modules/activity/controller/crud_controller_activity.dart';
+import 'package:aray/app/modules/activity/controller/crud_controller_activity_cover.dart';
 import 'package:aray/app/modules/activity/controller/crud_controller_activity_file.dart';
 import 'package:aray/app/modules/activity/controller/crud_controller_checklist.dart';
 import 'package:aray/utils/extension.dart';
@@ -14,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ActivityDetailAnimationController extends GetxController {
   final RxList<TextEditingController> checklistTextEditingControllers =
@@ -88,7 +90,8 @@ class ActivityDetailController extends GetxController {
   set args(value) => args.value = value;
 
   final RxList<File> activityFiles = <File>[].obs;
-  final isProjectFilesUploadingProgress = false.obs;
+  final isActivityFilesUploadingProgress = false.obs;
+  final isActivityCoverUploadingProgress = false.obs;
 
   String cardPath() => args["card_path"] as String;
   String cardId() => args["card_id"] as String;
@@ -96,8 +99,10 @@ class ActivityDetailController extends GetxController {
   String projectId() => args["project_id"] as String;
   Color colorTheme() => args["color_theme"] as Color;
 
-  set isProjectFilesUploadingProgress(value) =>
-      isProjectFilesUploadingProgress.value = value;
+  set isActivityFilesUploadingProgress(value) =>
+      isActivityFilesUploadingProgress.value = value;
+  set isActivityCoverUploadingProgress(value) =>
+      isActivityCoverUploadingProgress.value = value;
 
   CollectionReference<Checklist> checklistRef() => FirebaseFirestore.instance
       .collection(cardPath())
@@ -156,6 +161,12 @@ class ActivityDetailController extends GetxController {
     }
   }
 
+  Future<XFile?> openImagePicker() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    return image;
+  }
+
   // Operation for Checklist
   Stream<QuerySnapshot<Checklist>> streamChecklist() async* {
     final Stream<QuerySnapshot<Checklist>> checklist =
@@ -201,6 +212,18 @@ class ActivityDetailController extends GetxController {
     ActivityCRUDController.updateTimeStamp(activityRef(), dateTimeRange);
   }
 
+  // Operation for Activity Cover
+  Future<void> uploadActivityCover(XFile file) async {
+    final Reference activityCoverStorageRef =
+        activityStorageRef().child('/cover/');
+
+    final File coverFile = File(file.path);
+    isActivityCoverUploadingProgress.value = true;
+    await ActivityCoverCRUDController.upload(
+        activityRef(), activityCoverStorageRef, coverFile);
+    isActivityCoverUploadingProgress.value = false;
+  }
+
   // Operations for File
 
   // Stream Files
@@ -220,10 +243,10 @@ class ActivityDetailController extends GetxController {
     if (files.isNotEmpty) {
       final Reference activityFilesStorageRef =
           activityStorageRef().child('/files/');
-      isProjectFilesUploadingProgress.value = true;
+      isActivityFilesUploadingProgress.value = true;
       await ActivityFileCRUDController.uploadFiles(
           files, activityFileRef(), activityFilesStorageRef);
-      isProjectFilesUploadingProgress.value = false;
+      isActivityFilesUploadingProgress.value = false;
 
       // if uploading complete,set the activityfiles to zero to prevent endless upload
       activityFiles.value = [];

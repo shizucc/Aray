@@ -5,13 +5,15 @@ class Activity {
   String description;
   DateTime? startTime;
   DateTime? endTime;
-  String coverImage;
+  String coverName;
+  String coverUrl;
   List<dynamic>? files;
   bool timestamp;
   int order;
 
   Activity.withTimestamp(
-      {this.coverImage = '',
+      {this.coverName = '',
+      this.coverUrl = '',
       required this.name,
       this.description = '',
       this.startTime,
@@ -21,7 +23,8 @@ class Activity {
       required this.order});
 
   Activity.withoutTimestamp(
-      {this.coverImage = '',
+      {this.coverName = '',
+      this.coverUrl = '',
       required this.name,
       this.description = '',
       this.files,
@@ -34,7 +37,8 @@ class Activity {
       return Activity.withTimestamp(
           name: json['name'] as String,
           description: json['description'] as String,
-          coverImage: json['cover_image'] as String,
+          coverName: json['cover_image'] ?? '',
+          coverUrl: json['cover_url'] ?? '',
           startTime: (json['start_time'] as Timestamp).toDate(),
           endTime: (json['end_time'] as Timestamp).toDate(),
           files: json['files'] ?? [],
@@ -44,7 +48,8 @@ class Activity {
       return Activity.withoutTimestamp(
           name: json['name'] as String,
           description: json['description'] as String,
-          coverImage: json['cover_image'] as String,
+          coverName: json['cover_image'] ?? '',
+          coverUrl: json['cover_url'] ?? '',
           files: json['files'] ?? [],
           timestamp: timestamp,
           order: json['order'] as int);
@@ -54,7 +59,8 @@ class Activity {
     final Map<String, dynamic> json = {
       "name": name,
       "description": description,
-      "cover_image": coverImage,
+      "cover_name": coverName,
+      "cover_url": coverUrl,
       "files": files,
       "timestamp": false,
       "order": order
