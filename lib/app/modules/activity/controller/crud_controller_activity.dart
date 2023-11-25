@@ -34,7 +34,15 @@ class ActivityCRUDController {
       DocumentReference<Activity> reference, Reference storageReference) async {
     try {
       // Delete Cover First
-      final coverRef = storageReference.child('/cover');
+      deleteOnlyFileAndCover(storageReference);
+      await reference.delete();
+    } catch (e) {}
+  }
+
+  static Future<void> deleteOnlyFileAndCover(
+      Reference activityStorageReference) async {
+    try {
+      final coverRef = activityStorageReference.child('/cover');
       final listActivityCover = await coverRef.listAll();
       print(listActivityCover.items);
       for (var coverRef in listActivityCover.items) {
@@ -42,13 +50,11 @@ class ActivityCRUDController {
       }
 
       // Delete File
-      final filesRef = storageReference.child('/files');
+      final filesRef = activityStorageReference.child('/files');
       final listActivityFiles = await filesRef.listAll();
       for (var fileRef in listActivityFiles.items) {
         ActivityFileCRUDController.deleteOnlyFile(fileRef);
       }
-
-      await reference.delete();
     } catch (e) {}
   }
 }

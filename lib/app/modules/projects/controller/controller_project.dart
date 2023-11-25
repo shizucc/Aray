@@ -5,6 +5,7 @@ import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/modules/activity/controller/crud_controller_activity.dart';
 import 'package:aray/app/modules/projects/controller/crud_controller_card.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
@@ -177,8 +178,25 @@ class ProjectController extends GetxController {
   }
 
   Future<void> deleteCard(String cardId) async {
+    final activitiesSnapshot = await cardsRef()
+        .doc(cardId)
+        .collection('activity')
+        .withConverter(
+            fromFirestore: (snapshot, _) => Activity.fromJson(snapshot.data()!),
+            toFirestore: (Activity activity, _) => activity.toJson())
+        .get();
+
+    final List<Reference> activitiesStorageRef = [];
+    final activitiesDocumentSnaphsot = activitiesSnapshot.docs;
+    for (var activitySnapshot in activitiesDocumentSnaphsot) {
+      // Generate the activity storageref
+      final activityId = activitySnapshot.id;
+      final Reference ref = FirebaseStorage.instance.ref().child(
+          'user/public/projects/project_${projectId()}/activity_$activityId');
+      activitiesStorageRef.add(ref);
+    }
     final reference = cardsRef().doc(cardId);
-    await CardCRUDController.delete(reference);
+    await CardCRUDController.delete(reference, activitiesStorageRef);
   }
 
   Future<void> reorderCard(

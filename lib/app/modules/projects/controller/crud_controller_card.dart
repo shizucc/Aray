@@ -1,5 +1,8 @@
 import 'package:aray/app/data/model/model_card.dart';
+import 'package:aray/app/modules/activity/controller/crud_controller_activity.dart';
+import 'package:aray/app/modules/activity/controller/crud_controller_activity_file.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class CardCRUDController {
   static Future<void> addNew(
@@ -18,7 +21,18 @@ class CardCRUDController {
     await reference.update({'updated_at': Timestamp.fromDate(DateTime.now())});
   }
 
-  static Future<void> delete(DocumentReference<CardModel> reference) async {
+  static Future<void> delete(DocumentReference<CardModel> reference,
+      List<Reference> activitiesStorageReferences) async {
     await reference.delete();
+
+    // Loop activity in this card
+    deleteOnlyCardActivitiesCoverAndFiles(activitiesStorageReferences);
+  }
+
+  static Future<void> deleteOnlyCardActivitiesCoverAndFiles(
+      List<Reference> activitiesStorageReferences) async {
+    for (var activityStorageReference in activitiesStorageReferences) {
+      ActivityCRUDController.deleteOnlyFileAndCover(activityStorageReference);
+    }
   }
 }
