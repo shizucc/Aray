@@ -153,6 +153,7 @@ class ProjectDetail extends StatelessWidget {
                         child: Center(
                             child: Text(
                           "Use Default Theme",
+                          textAlign: TextAlign.center,
                           style: isUseImage
                               ? TextStyle(
                                   fontSize: 12,
@@ -183,6 +184,7 @@ class ProjectDetail extends StatelessWidget {
                         child: Center(
                             child: Text(
                           "Add Cover Image",
+                          textAlign: TextAlign.center,
                           style: isUseImage
                               ? TextStyle(
                                   fontSize: 12,

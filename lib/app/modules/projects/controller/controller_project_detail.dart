@@ -62,7 +62,7 @@ class ProjectDetailAnimationController extends GetxController {
     final personalize = project.personalize;
 
     final isUseImage = personalize['use_image'] as bool;
-    this.defaultTheme.value = personalize['color'];
+    defaultTheme.value = personalize['color'];
 
     this.isUseImage.value = isUseImage;
 

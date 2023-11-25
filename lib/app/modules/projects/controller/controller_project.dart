@@ -3,6 +3,7 @@ import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_color_theme.dart';
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/modules/activity/controller/crud_controller_activity.dart';
+import 'package:aray/app/modules/projects/controller/crud_controller_card.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
@@ -10,8 +11,12 @@ import 'package:get/get.dart';
 class ProjectAnimationController extends GetxController {
   final Rx<Color> colorTheme = const Color(0x00000000).obs;
   final Rx<Color> cardColor =
-      Color.fromRGBO(241, 239, 239, 1).withOpacity(0.95).obs;
+      const Color.fromRGBO(241, 239, 239, 1).withOpacity(0.95).obs;
+
+  final isCardNameEditing = true.obs;
   set colorTheme(value) => colorTheme.value = value;
+  set isCardNameEditing(value) => isCardNameEditing.value = value;
+
   Color getColorTheme(Project project) {
     final bool isUseImage = project.personalize['use_image'] as bool;
     if (isUseImage) {
@@ -149,9 +154,26 @@ class ProjectController extends GetxController {
     // Get the total of Activity
     final activitiesSnapshot = await activitiesRef.get();
     final activitiesLength = activitiesSnapshot.docs.length;
-    final Activity activity = Activity.withoutTimestamp(
-        name: activityName, order: activitiesLength - 1);
+    final Activity activity =
+        Activity.withoutTimestamp(name: activityName, order: activitiesLength);
     await ActivityCRUDController.addNew(activitiesRef, activity);
+  }
+
+  // Add New Card
+  Future<void> addNewCard(String cardName) async {
+    final cardsSnapshot = await cardsRef().get();
+    final cardsLength = cardsSnapshot.docs.length;
+    final CardModel card = CardModel(
+        name: cardName,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        order: cardsLength);
+    await CardCRUDController.addNew(cardsRef(), card);
+  }
+
+  Future<void> updateCardName(String cardId, String cardName) async {
+    final reference = cardsRef().doc(cardId);
+    await CardCRUDController.update(reference, cardName);
   }
 
   Future<void> reorderCard(

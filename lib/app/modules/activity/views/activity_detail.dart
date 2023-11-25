@@ -355,21 +355,21 @@ class ActivityAttachmentField extends StatelessWidget {
                         const Gap(3),
                         Text(
                           file.name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
-                    const Gap(5),
+                    const Gap(2),
                     Row(
                       children: [
-                        const Icon(
-                          CupertinoIcons.clock,
-                          size: 13,
-                        ),
-                        const Gap(3),
-                        Text(DateHandler.dateAndTimeFormat(file.createdAt),
-                            style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.black.withOpacity(0.5)))
+                        Expanded(
+                          child: Text(
+                              DateHandler.dateAndTimeFormat(file.createdAt),
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.black.withOpacity(0.5))),
+                        )
                       ],
                     ),
                   ],

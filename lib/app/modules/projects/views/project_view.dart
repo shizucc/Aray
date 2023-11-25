@@ -24,12 +24,7 @@ class ProjectView extends StatelessWidget {
 
     // Init the arguments
     c.args = Get.arguments;
-    final String projectId = Get.arguments['project_id'];
-    final String workspaceId = Get.arguments['workspace_id'];
-    final Project projectDump = Get.arguments['project'];
 
-    Color cardColor = const Color.fromRGBO(241, 239, 239, 1).withOpacity(0.95);
-    // a.streamProject(workspaceRef.id, projectSnapshot.id);
     return StreamBuilder(
       stream: c.streamProject(),
       builder: (context, snapshot) {
@@ -38,7 +33,7 @@ class ProjectView extends StatelessWidget {
             snapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
             appBar: AppBar(
-              title: Text(projectDump.name),
+              title: Text(c.projectDump().name),
             ),
           );
         }
@@ -51,6 +46,7 @@ class ProjectView extends StatelessWidget {
         a.colorTheme.value = a.getColorTheme(project);
 
         return Scaffold(
+          resizeToAvoidBottomInset: false,
           backgroundColor:
               isUseImage ? a.colorTheme.value : Color(projectTheme.baseColor!),
           appBar: AppBar(
@@ -83,57 +79,130 @@ class ProjectView extends StatelessWidget {
                   : const TextStyle(color: Colors.white),
             ),
             actions: [
-              IconButton(
-                  onPressed: () {
-                    Get.toNamed(Routes.PROJECTDETAIL, arguments: {
-                      'projectId': projectId,
-                      'workspaceId': workspaceId
-                    });
-                  },
-                  icon: isUseImage
-                      ? Icon(
-                          CupertinoIcons.ellipsis,
-                          color: a.colorTheme.value.isDark
-                              ? Colors.white
-                              : Colors.black,
-                        )
-                      : const Icon(
-                          CupertinoIcons.ellipsis,
-                          color: Colors.white,
-                        ))
+              PopupMenuButton(
+                icon: isUseImage
+                    ? Icon(
+                        CupertinoIcons.ellipsis_vertical,
+                        color: a.colorTheme.value.isDark
+                            ? Colors.white
+                            : Colors.black,
+                      )
+                    : const Icon(
+                        CupertinoIcons.ellipsis_vertical,
+                        color: Colors.white,
+                      ),
+                itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+                  PopupMenuItem(
+                    value: 'add_new_card',
+                    onTap: () {
+                      // Method to add new card
+                      showDialog(
+                        context: context,
+                        builder: (context) => addCardDialog(context, a, c),
+                      );
+                    },
+                    child: const Text('Add New Card'),
+                  ),
+                  PopupMenuItem(
+                    value: 'project_details',
+                    onTap: () {
+                      Get.toNamed(Routes.PROJECTDETAIL, arguments: {
+                        'projectId': c.projectId(),
+                        'workspaceId': c.workspaceId()
+                      });
+                    },
+                    child: const Text('Project Details'),
+                  ),
+                ],
+              ),
             ],
           ),
-          body: Container(
-            height: Get.height,
-            width: Get.width,
-            decoration: BoxDecoration(
-                image: isUseImage
-                    ? DecorationImage(
-                        fit: BoxFit.cover,
-                        image: NetworkImage(project.personalize['image_link']))
-                    : null),
-            padding: const EdgeInsets.symmetric(vertical: 25),
-            child: StreamBuilder(
-              stream: c.streamCards(),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Text(snapshot.error.toString());
-                }
+          body: Builder(
+            builder: (context) => ConstrainedBox(
+              constraints:
+                  BoxConstraints(maxHeight: Get.height, maxWidth: Get.width),
+              child: Container(
+                height: Get.height,
+                width: Get.width,
+                decoration: BoxDecoration(
+                    image: isUseImage
+                        ? DecorationImage(
+                            fit: BoxFit.cover,
+                            image:
+                                NetworkImage(project.personalize['image_link']))
+                        : null),
+                padding: const EdgeInsets.symmetric(vertical: 25),
+                child: StreamBuilder(
+                  stream: c.streamCards(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Text(snapshot.error.toString());
+                    }
 
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                }
-                final cardsSnapshot = snapshot.data!;
-                return ProjectCards(
-                  cardsSnapshot: cardsSnapshot,
-                  projectTheme: projectTheme,
-                );
-              },
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    }
+                    final cardsSnapshot = snapshot.data!;
+                    return ProjectCards(
+                      cardsSnapshot: cardsSnapshot,
+                      projectTheme: projectTheme,
+                    );
+                  },
+                ),
+              ),
             ),
           ),
         );
       },
     );
+  }
+
+  AlertDialog addCardDialog(
+      BuildContext context, ProjectAnimationController a, ProjectController c) {
+    final formKey = GlobalKey<FormState>();
+    final cardNameTextFieldController = TextEditingController();
+    return AlertDialog(
+        actions: [
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child:
+                  const Text("Cancel", style: TextStyle(color: Colors.black))),
+          TextButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  final cardName = cardNameTextFieldController.value.text;
+                  c.addNewCard(cardName);
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text(
+                "Add",
+                style: TextStyle(color: Colors.blue),
+              ))
+        ],
+        title: Text("Add Card in '${c.projectDump().name}'"),
+        titleTextStyle: const TextStyle(fontSize: 16, color: Colors.black),
+        content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Form(
+                key: formKey,
+                child: TextFormField(
+                  controller: cardNameTextFieldController,
+                  autofocus: true,
+                  maxLength: 30,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Card name cannot be empty!';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ]));
   }
 }
 
@@ -200,6 +269,7 @@ class ProjectCardsContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final a = Get.find<ProjectAnimationController>();
+    final c = Get.find<ProjectController>();
     return Container(
       margin: const EdgeInsets.only(right: 15, left: 15),
       width: Get.width * (0.85),
@@ -224,9 +294,33 @@ class ProjectCardsContent extends StatelessWidget {
                       style: const TextStyle(fontSize: 16),
                     ),
                   ),
-                  IconButton(
-                      onPressed: () {},
-                      icon: const Icon(CupertinoIcons.ellipsis))
+                  PopupMenuButton(
+                    icon: const Icon(
+                      CupertinoIcons.ellipsis_vertical,
+                      size: 16,
+                    ),
+                    itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+                      PopupMenuItem(
+                        value: 'rename_card',
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) =>
+                                renameCardDialog(context, a, c),
+                          );
+                        },
+                        child: const Text('Rename Card'),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete_card',
+                        onTap: () {},
+                        child: const Text(
+                          'Delete Card',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -244,6 +338,67 @@ class ProjectCardsContent extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  AlertDialog renameCardDialog(
+      BuildContext context, ProjectAnimationController a, ProjectController c) {
+    final formKey = GlobalKey<FormState>();
+    final cardNameTextFieldController = TextEditingController();
+    return AlertDialog(
+        actions: [
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child:
+                  const Text("Cancel", style: TextStyle(color: Colors.black))),
+          TextButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  final cardName = cardNameTextFieldController.value.text;
+                  c.updateCardName(cardSnapshot.id, cardName);
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text(
+                "Rename",
+                style: TextStyle(color: Colors.black),
+              ))
+        ],
+        title: const Text(
+          "Rename Card",
+          style: TextStyle(color: Colors.black, fontSize: 18),
+        ),
+        content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "From :",
+                style: TextStyle(color: Colors.black.withOpacity(0.5)),
+              ),
+              Text(
+                cardSnapshot.data().name,
+                style: TextStyle(fontSize: 16),
+              ),
+              Gap(10),
+              Text("To :",
+                  style: TextStyle(color: Colors.black.withOpacity(0.5))),
+              Form(
+                key: formKey,
+                child: TextFormField(
+                  controller: cardNameTextFieldController,
+                  autofocus: true,
+                  maxLength: 30,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Card name cannot be empty!';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ]));
   }
 }
 
@@ -429,12 +584,15 @@ class ProjectActivities extends StatelessWidget {
                   Navigator.pop(context);
                 }
               },
-              child: Text(
+              child: const Text(
                 "Add",
-                style: TextStyle(color: a.colorTheme.value),
+                style: TextStyle(color: Colors.blue),
               ))
         ],
-        title: Text("Add Activity in ${cardSnapshot.data().name}"),
+        title: Text(
+          "Add Activity in '${cardSnapshot.data().name}' card",
+          style: TextStyle(color: Colors.black, fontSize: 16),
+        ),
         content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
