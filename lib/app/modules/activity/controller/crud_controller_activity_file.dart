@@ -54,4 +54,10 @@ class ActivityFileCRUDController {
       throw Exception('Could not launch $url');
     }
   }
+
+  static Future<void> deleteOnlyFile(Reference activityFileStorageRef) async {
+    try {
+      await activityFileStorageRef.delete();
+    } catch (e) {}
+  }
 }

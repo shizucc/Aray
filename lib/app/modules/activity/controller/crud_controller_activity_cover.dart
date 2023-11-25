@@ -39,9 +39,14 @@ class ActivityCoverCRUDController {
     Reference activityCoverStorageRef,
   ) async {
     try {
-      print(activityCoverStorageRef);
-      await activityCoverStorageRef.delete();
+      await deleteOnlyCover(activityCoverStorageRef);
       await delete(activityRef);
+    } catch (e) {}
+  }
+
+  static Future<void> deleteOnlyCover(Reference activityCoverStorageRef) async {
+    try {
+      await activityCoverStorageRef.delete();
     } catch (e) {}
   }
 }

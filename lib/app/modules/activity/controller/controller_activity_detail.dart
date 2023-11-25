@@ -214,7 +214,6 @@ class ActivityDetailController extends GetxController {
 
   Future<void> deleteActivityComplete() async {
     ActivityCRUDController.delete(activityRef(), activityStorageRef());
-    print(activityStorageRef());
   }
 
   // Operation for Activity Cover

@@ -1,4 +1,6 @@
 import 'package:aray/app/data/model/model_activity.dart';
+import 'package:aray/app/modules/activity/controller/crud_controller_activity_cover.dart';
+import 'package:aray/app/modules/activity/controller/crud_controller_activity_file.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
@@ -31,11 +33,22 @@ class ActivityCRUDController {
   static Future<void> delete(
       DocumentReference<Activity> reference, Reference storageReference) async {
     try {
+      // Delete Cover First
+      final coverRef = storageReference.child('/cover');
+      final listActivityCover = await coverRef.listAll();
+      print(listActivityCover.items);
+      for (var coverRef in listActivityCover.items) {
+        ActivityCoverCRUDController.deleteOnlyCover(coverRef);
+      }
+
+      // Delete File
+      final filesRef = storageReference.child('/files');
+      final listActivityFiles = await filesRef.listAll();
+      for (var fileRef in listActivityFiles.items) {
+        ActivityFileCRUDController.deleteOnlyFile(fileRef);
+      }
+
       await reference.delete();
-      print(storageReference);
-      final listActivityFiles = await storageReference.listAll();
-      await Future.wait(listActivityFiles.items.map((item) => item.delete()));
-      await storageReference.delete();
     } catch (e) {}
   }
 }
