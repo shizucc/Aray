@@ -128,10 +128,16 @@ class ActivityDetailData extends StatelessWidget {
                   icon: const Icon(CupertinoIcons.ellipsis_vertical),
                   itemBuilder: (BuildContext context) => <PopupMenuEntry>[
                     PopupMenuItem(
-                      child: const Text('Delete Activity'),
+                      child: const Text(
+                        'Delete Activity',
+                        style: TextStyle(color: Colors.red),
+                      ),
                       value: 'delete_activity',
                       onTap: () {
-                        print("activity deleted");
+                        showDialog(
+                          context: context,
+                          builder: (context) => deleteActivityDialog(context),
+                        );
                       },
                     ),
                   ],
@@ -204,6 +210,74 @@ class ActivityDetailData extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [Text("This action cannot be undone")]));
+  }
+
+  AlertDialog deleteActivityDialog(BuildContext context) {
+    final formKey = GlobalKey<FormState>();
+    final cardNameTextFieldController = TextEditingController();
+    return AlertDialog(
+        actions: [
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child:
+                  const Text("Cancel", style: TextStyle(color: Colors.black))),
+          TextButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  c.deleteActivityComplete();
+                  Get.back();
+                  Get.back();
+                }
+              },
+              child: const Text(
+                "Delete",
+                style: TextStyle(color: Colors.red),
+              ))
+        ],
+        title: const Text(
+          "Delete Activity",
+          style: TextStyle(color: Colors.red, fontSize: 25),
+        ),
+        content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Re-enter this Activity name",
+                style: TextStyle(color: Colors.black.withOpacity(0.5)),
+              ),
+              Text(
+                activity.name,
+                style: const TextStyle(fontSize: 18),
+              ),
+              const Gap(10),
+              Form(
+                key: formKey,
+                child: TextFormField(
+                  controller: cardNameTextFieldController,
+                  autofocus: true,
+                  validator: (value) {
+                    if (value == null ||
+                        value.isEmpty ||
+                        value != activity.name) {
+                      return "You're saved!";
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const Gap(5),
+              const Text(
+                "This Method cannot be undone",
+                style: TextStyle(color: Colors.red),
+              ),
+              const Text(
+                "All files in this activity will be destroyed!",
+                style: TextStyle(color: Colors.red),
+              ),
+            ]));
   }
 }
 

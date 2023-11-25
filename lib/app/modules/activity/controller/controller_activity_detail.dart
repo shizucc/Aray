@@ -212,6 +212,11 @@ class ActivityDetailController extends GetxController {
     ActivityCRUDController.updateTimeStamp(activityRef(), dateTimeRange);
   }
 
+  Future<void> deleteActivityComplete() async {
+    ActivityCRUDController.delete(activityRef(), activityStorageRef());
+    print(activityStorageRef());
+  }
+
   // Operation for Activity Cover
   Future<void> uploadActivityCover(XFile file) async {
     final Reference activityCoverStorageRef =

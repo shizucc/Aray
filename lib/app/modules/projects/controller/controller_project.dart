@@ -176,6 +176,11 @@ class ProjectController extends GetxController {
     await CardCRUDController.update(reference, cardName);
   }
 
+  Future<void> deleteCard(String cardId) async {
+    final reference = cardsRef().doc(cardId);
+    await CardCRUDController.delete(reference);
+  }
+
   Future<void> reorderCard(
       List<QueryDocumentSnapshot<CardModel>> cardsQuerySnapshot,
       int oldIndex,

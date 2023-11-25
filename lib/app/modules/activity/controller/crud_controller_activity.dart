@@ -1,5 +1,6 @@
 import 'package:aray/app/data/model/model_activity.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 
 class ActivityCRUDController {
@@ -25,5 +26,16 @@ class ActivityCRUDController {
       'start_time': dateTimeRange.start,
       'end_time': dateTimeRange.end
     });
+  }
+
+  static Future<void> delete(
+      DocumentReference<Activity> reference, Reference storageReference) async {
+    try {
+      await reference.delete();
+      print(storageReference);
+      final listActivityFiles = await storageReference.listAll();
+      await Future.wait(listActivityFiles.items.map((item) => item.delete()));
+      await storageReference.delete();
+    } catch (e) {}
   }
 }

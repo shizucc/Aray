@@ -313,7 +313,13 @@ class ProjectCardsContent extends StatelessWidget {
                       ),
                       PopupMenuItem(
                         value: 'delete_card',
-                        onTap: () {},
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) =>
+                                deleteCardDialog(context, a, c),
+                          );
+                        },
                         child: const Text(
                           'Delete Card',
                           style: TextStyle(color: Colors.red),
@@ -379,9 +385,9 @@ class ProjectCardsContent extends StatelessWidget {
               ),
               Text(
                 cardSnapshot.data().name,
-                style: TextStyle(fontSize: 16),
+                style: const TextStyle(fontSize: 16),
               ),
-              Gap(10),
+              const Gap(10),
               Text("To :",
                   style: TextStyle(color: Colors.black.withOpacity(0.5))),
               Form(
@@ -397,6 +403,75 @@ class ProjectCardsContent extends StatelessWidget {
                     return null;
                   },
                 ),
+              ),
+            ]));
+  }
+
+  AlertDialog deleteCardDialog(
+      BuildContext context, ProjectAnimationController a, ProjectController c) {
+    final formKey = GlobalKey<FormState>();
+    final cardNameTextFieldController = TextEditingController();
+    return AlertDialog(
+        actions: [
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child:
+                  const Text("Cancel", style: TextStyle(color: Colors.black))),
+          TextButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  c.deleteCard(cardSnapshot.id);
+
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text(
+                "Delete",
+                style: TextStyle(color: Colors.red),
+              ))
+        ],
+        title: const Text(
+          "Delete Card",
+          style: TextStyle(color: Colors.red, fontSize: 25),
+        ),
+        content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Re-enter this Card name",
+                style: TextStyle(color: Colors.black.withOpacity(0.5)),
+              ),
+              Text(
+                cardSnapshot.data().name,
+                style: const TextStyle(fontSize: 18),
+              ),
+              const Gap(10),
+              Form(
+                key: formKey,
+                child: TextFormField(
+                  controller: cardNameTextFieldController,
+                  autofocus: true,
+                  validator: (value) {
+                    if (value == null ||
+                        value.isEmpty ||
+                        value != cardSnapshot.data().name) {
+                      return "You're saved!";
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const Gap(5),
+              const Text(
+                "This Method cannot be undone",
+                style: TextStyle(color: Colors.red),
+              ),
+              const Text(
+                "All files in this card will be destroyed!",
+                style: TextStyle(color: Colors.red),
               ),
             ]));
   }
@@ -591,7 +666,7 @@ class ProjectActivities extends StatelessWidget {
         ],
         title: Text(
           "Add Activity in '${cardSnapshot.data().name}' card",
-          style: TextStyle(color: Colors.black, fontSize: 16),
+          style: const TextStyle(color: Colors.black, fontSize: 16),
         ),
         content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

@@ -17,4 +17,8 @@ class CardCRUDController {
       DocumentReference<CardModel> reference) async {
     await reference.update({'updated_at': Timestamp.fromDate(DateTime.now())});
   }
+
+  static Future<void> delete(DocumentReference<CardModel> reference) async {
+    await reference.delete();
+  }
 }
