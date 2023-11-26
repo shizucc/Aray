@@ -1,6 +1,8 @@
 import 'package:aray/app/data/model/model_activity.dart';
 import 'package:aray/app/data/model/model_card.dart';
+import 'package:aray/app/data/model/model_checklist.dart';
 import 'package:aray/app/data/model/model_color_theme.dart';
+import 'package:aray/app/data/model/model_file.dart';
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/modules/activity/controller/crud_controller_activity.dart';
 import 'package:aray/app/modules/projects/controller/crud_controller_card.dart';
@@ -67,6 +69,27 @@ class ProjectController extends GetxController {
           fromFirestore: (snapshot, _) => CardModel.fromJson(snapshot.data()!),
           toFirestore: (CardModel card, _) => card.toJson());
 
+  CollectionReference<Activity> activitiesRef(String cardId) =>
+      cardsRef().doc(cardId).collection('activity').withConverter(
+          fromFirestore: (snapshot, _) => Activity.fromJson(snapshot.data()!),
+          toFirestore: (Activity activity, _) => activity.toJson());
+
+  CollectionReference<FileModel> activityFilesRef(
+          String cardId, String activityId) =>
+      activitiesRef(cardId).doc(activityId).collection('file').withConverter(
+          fromFirestore: (snapshot, _) => FileModel.fromJson(snapshot.data()!),
+          toFirestore: (FileModel file, _) => file.toJson());
+
+  CollectionReference<Checklist> activityChecklistRef(
+          String cardId, String activityId) =>
+      activitiesRef(cardId)
+          .doc(activityId)
+          .collection('checklist')
+          .withConverter(
+              fromFirestore: (snapshot, _) =>
+                  Checklist.fromJson(snapshot.data()!),
+              toFirestore: (Checklist checklist, _) => checklist.toJson());
+
   // Stream one project
   Stream<DocumentSnapshot<Project>> streamProject() async* {
     final Stream<DocumentSnapshot<Project>> project = projectRef().snapshots();
@@ -79,6 +102,13 @@ class ProjectController extends GetxController {
         cardsRef().orderBy('order').snapshots();
     cardPath.value = cardsRef().path;
     yield* cards;
+  }
+
+  // get all card
+  Future<List<QueryDocumentSnapshot<CardModel>>> getCards() async {
+    final cardsSnapshot = await cardsRef().orderBy('order').get();
+    final cards = cardsSnapshot.docs;
+    return cards;
   }
 
   // Stream Activities dengan parameter satu card
@@ -126,6 +156,9 @@ class ProjectController extends GetxController {
             toFirestore: (Activity activity, _) => activity.toJson());
 
     final documents = activitiesSnapshot;
+
+    // final dump = activityRef.orderBy('order')
+
     if (oldIndex < newIndex) {
       for (int i = oldIndex; i < newIndex && i < documents.length - 1; i++) {
         final previousItem = documents[i];
@@ -158,6 +191,53 @@ class ProjectController extends GetxController {
     final Activity activity =
         Activity.withoutTimestamp(name: activityName, order: activitiesLength);
     await ActivityCRUDController.addNew(activitiesRef, activity);
+  }
+
+  // Move Activity
+  Future<void> moveActivity(
+      String cardIdCurrent, String cardIdTarget, String activityId) async {
+    // Get the count of target card
+    final dump = await activitiesRef(cardIdTarget).get();
+    final count = dump.docs.length;
+
+    /// Copy activity
+    final activitySnapshot =
+        await activitiesRef(cardIdCurrent).doc(activityId).get();
+
+    final Activity activity = activitySnapshot.data()!;
+    activity.order = count;
+    await activitiesRef(cardIdTarget)
+        .doc(activityId)
+        .set(activitySnapshot.data()!);
+
+    // Copy Files
+    final activityFilesSnapshot =
+        await activityFilesRef(cardIdCurrent, activityId).get();
+
+    final activityFilesDocumentSnapshot = activityFilesSnapshot.docs;
+    for (var activityFileSnapshot in activityFilesDocumentSnapshot) {
+      final activityFileId = activityFileSnapshot.id;
+      final activityFile = activityFileSnapshot.data();
+      await activityFilesRef(cardIdTarget, activityId)
+          .doc(activityFileId)
+          .set(activityFile);
+    }
+
+    // copy checklist
+    final activityChecklistSnapshot =
+        await activityChecklistRef(cardIdCurrent, activityId).get();
+
+    final activityChecklistDocumentsSnapshot = activityChecklistSnapshot.docs;
+    for (var activityCheckSnapshot in activityChecklistDocumentsSnapshot) {
+      final activityCheckId = activityCheckSnapshot.id;
+      final activityCheck = activityCheckSnapshot.data();
+      await activityChecklistRef(cardIdTarget, activityId)
+          .doc(activityCheckId)
+          .set(activityCheck);
+    }
+
+    // Delete old Activity in old Card
+    await activitiesRef(cardIdCurrent).doc(activityId).delete();
   }
 
   // Add New Card

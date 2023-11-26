@@ -7,14 +7,19 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 
-class WorkspacePage extends StatelessWidget {
+class WorkspacePage extends StatefulWidget {
   const WorkspacePage({super.key});
 
+  @override
+  State<WorkspacePage> createState() => _WorkspacePageState();
+}
+
+class _WorkspacePageState extends State<WorkspacePage> {
   @override
   Widget build(BuildContext context) {
     final a = Get.put(WorkspaceAnimationController());
     final c = Get.put(WorkspaceController());
-    c.fetchWorkspaces();
+    // c.fetchWorkspaces();
     return Scaffold(
       appBar: AppBar(
         leading: const Icon(Icons.menu),
@@ -25,25 +30,33 @@ class WorkspacePage extends StatelessWidget {
               icon: const Icon(Icons.power))
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 15),
-        child: FutureBuilder<List<DocumentReference<Workspace>>>(
-          future: c.fetchWorkspaces(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Container();
-            } else if (snapshot.hasError) {
-              return Text("Error: ${snapshot.error}");
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Text("Tidak ada data.");
-            } else {
-              final workspaces = snapshot.data!;
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: WorskpaceList(workspaces: workspaces, c: c),
-              );
-            }
-          },
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await c.fetchWorkspaces();
+          setState(() {
+            // Setelah refresh, panggil setState untuk memicu pembaruan widget
+          });
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          child: FutureBuilder<List<DocumentReference<Workspace>>>(
+            future: c.fetchWorkspaces(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Container();
+              } else if (snapshot.hasError) {
+                return Text("Error: ${snapshot.error}");
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Text("Tidak ada data.");
+              } else {
+                final workspaces = snapshot.data!;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: WorskpaceList(workspaces: workspaces, c: c),
+                );
+              }
+            },
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -89,6 +102,7 @@ class WorkspacePage extends StatelessWidget {
                   final projectName = projectNameTextFieldController.value.text;
                   c.addNewProject(projectName);
                   Navigator.pop(context);
+                  setState(() {});
                 }
               },
               child: const Text(

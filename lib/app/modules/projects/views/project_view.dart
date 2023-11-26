@@ -558,12 +558,6 @@ class ProjectActivities extends StatelessWidget {
                               vertical: 15, horizontal: 15),
                           child: Row(
                             children: [
-                              MyButtonIcon(
-                                  icon: const Icon(
-                                    CupertinoIcons.ellipsis_vertical,
-                                    size: 13,
-                                  ),
-                                  onTap: () {}),
                               const Gap(3),
                               Expanded(
                                 child: Text(
@@ -573,33 +567,22 @@ class ProjectActivities extends StatelessWidget {
                                   style: const TextStyle(fontSize: 14),
                                 ),
                               ),
-                              const Row(
-                                children: [
-                                  Icon(
-                                    Icons.attach_file,
-                                    size: 14,
+                              MyButtonIcon(
+                                  icon: const Icon(
+                                    CupertinoIcons.ellipsis,
+                                    size: 13,
                                   ),
-                                  SizedBox(
-                                    width: 5,
-                                  ),
-                                  Text("2")
-                                ],
-                              ),
-                              const SizedBox(
-                                width: 5,
-                              ),
-                              const Row(
-                                children: [
-                                  Icon(
-                                    Icons.task_outlined,
-                                    size: 14,
-                                  ),
-                                  SizedBox(
-                                    width: 5,
-                                  ),
-                                  Text("1/2")
-                                ],
-                              ),
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => MoveActivityDialog(
+                                          context: context,
+                                          activitySnapshot: activitySnapshot,
+                                          currentCardSnapshot: cardSnapshot,
+                                          a: a,
+                                          c: c),
+                                    );
+                                  }),
                             ],
                           ),
                         ),
@@ -685,6 +668,86 @@ class ProjectActivities extends StatelessWidget {
                   },
                 ),
               ),
+            ]));
+  }
+}
+
+class MoveActivityDialog extends StatelessWidget {
+  const MoveActivityDialog({
+    super.key,
+    required this.context,
+    required this.activitySnapshot,
+    required this.currentCardSnapshot,
+    required this.a,
+    required this.c,
+  });
+
+  final BuildContext context;
+  final QueryDocumentSnapshot<Activity> activitySnapshot;
+  final QueryDocumentSnapshot<CardModel> currentCardSnapshot;
+  final ProjectAnimationController a;
+  final ProjectController c;
+
+  @override
+  Widget build(BuildContext context) {
+    final Activity activity = activitySnapshot.data();
+    final formKey = GlobalKey<FormState>();
+    final activityNameTextFieldController = TextEditingController();
+    return AlertDialog(
+        actions: [
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child:
+                  const Text("Cancel", style: TextStyle(color: Colors.black))),
+        ],
+        title: const Text(
+          "Move Activity",
+        ),
+        content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Center(
+                child: Text(
+                  "${activity.name}",
+                  style: TextStyle(fontSize: 15),
+                ),
+              ),
+              Gap(5),
+              Text(
+                "To :",
+                style: TextStyle(color: Colors.black.withOpacity(0.5)),
+              ),
+              FutureBuilder(
+                future: c.getCards(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting ||
+                      snapshot.hasError) {
+                    return Container();
+                  }
+                  final cardsSnapshot = snapshot.data!;
+                  final List<DropdownMenuItem> cardsItems =
+                      cardsSnapshot.map((cardSnapshot) {
+                    final CardModel card = cardSnapshot.data();
+                    return DropdownMenuItem(
+                        value: cardSnapshot.id, child: Text("${card.name}"));
+                  }).toList();
+                  return DropdownButton(
+                    items: cardsItems,
+                    onChanged: (value) {
+                      final cardIdCurrent = currentCardSnapshot.id;
+                      final cardIdTarget = value as String;
+                      final activityId = activitySnapshot.id;
+                      if (cardIdCurrent != cardIdTarget) {
+                        c.moveActivity(cardIdCurrent, cardIdTarget, activityId);
+                      }
+                      Navigator.pop(context);
+                    },
+                  );
+                },
+              )
             ]));
   }
 }
