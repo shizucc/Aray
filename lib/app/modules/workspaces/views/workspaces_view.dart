@@ -119,35 +119,6 @@ class WorkspacePage extends StatelessWidget {
               ),
               const Gap(5),
               const Text("Select Workspace to place the project"),
-              // DropdownButton(
-              //   value: '2',
-              //   menuMaxHeight: Get.height / 2,
-              //   items: <String>[
-              //     '1',
-              //     '2',
-              //     '3',
-              //     '4',
-              //     '5',
-              //     '6',
-              //     '7',
-              //     '8',
-              //     '9',
-              //     '10',
-              //     '11',
-              //     '12',
-              //     '13',
-              //     '14',
-              //     '15',
-              //     '16',
-              //     '17'
-              //   ].map<DropdownMenuItem<String>>((String value) {
-              //     return DropdownMenuItem<String>(
-              //       value: value,
-              //       child: Text(value),
-              //     );
-              //   }).toList(),
-              //   onChanged: (value) {},
-              // ),
               const Gap(15),
               FutureBuilder(
                 future: c.getAllowedWorkspaceNewProject(),

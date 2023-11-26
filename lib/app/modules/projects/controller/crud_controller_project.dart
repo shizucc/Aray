@@ -6,4 +6,8 @@ class ProjectCRUDController {
       CollectionReference<Project> projectRef, Project project) async {
     await projectRef.add(project);
   }
+
+  static Future<void> delete(DocumentReference<Project> reference) async {
+    await reference.delete();
+  }
 }

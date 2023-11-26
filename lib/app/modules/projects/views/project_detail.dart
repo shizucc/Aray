@@ -25,9 +25,31 @@ class ProjectDetail extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         actions: [
-          IconButton(
-              onPressed: () {},
-              icon: const Icon(CupertinoIcons.ellipsis_vertical))
+          PopupMenuButton(
+            icon: const Icon(CupertinoIcons.ellipsis_vertical),
+            itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+              PopupMenuItem(
+                value: 'Move this Project',
+                onTap: () {
+                  // Method to add new card
+                },
+                child: const Text('Move this Project'),
+              ),
+              PopupMenuItem(
+                value: 'End this Project',
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => deleteProjectDialog(context, a, c),
+                  );
+                },
+                child: const Text(
+                  'End this Project',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
       body: SafeArea(
@@ -43,11 +65,13 @@ class ProjectDetail extends StatelessWidget {
                 return const CircularProgressIndicator();
               }
               final projectSnapshot = snapshot.data;
-              final Project? project = projectSnapshot!.data();
+              final Project project = projectSnapshot!.data()!;
 
+              // Init the project dump
+              c.projectDump.value = project;
               final ColorTheme colorTheme =
-                  ColorTheme(code: project?.personalize['color']);
-              a.initPersonalize(c, project!, c.projectId(), c.workspaceId());
+                  ColorTheme(code: project.personalize['color']);
+              a.initPersonalize(c, project, c.projectId(), c.workspaceId());
 
               return GestureDetector(
                 onTap: () {
@@ -57,7 +81,7 @@ class ProjectDetail extends StatelessWidget {
                 child: ListView(
                   children: [
                     titleOfDetail("Project Name", CupertinoIcons.doc),
-                    Obx(() => projectNameField(a, c, project!)),
+                    Obx(() => projectNameField(a, c, project)),
                     const SizedBox(
                       height: 20,
                     ),
@@ -108,6 +132,88 @@ class ProjectDetail extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  AlertDialog deleteProjectDialog(BuildContext context,
+      ProjectDetailAnimationController a, ProjectDetailController c) {
+    final formKey = GlobalKey<FormState>();
+    final projectConfirmation1TextFieldController = TextEditingController();
+    final projectConfirmation2TextFieldController = TextEditingController();
+    return AlertDialog(
+        actions: [
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child:
+                  const Text("Cancel", style: TextStyle(color: Colors.black))),
+          TextButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  c.deleteProject();
+
+                  Get.offAllNamed('/workspace');
+                }
+              },
+              child: const Text(
+                "Delete",
+                style: TextStyle(color: Colors.red),
+              ))
+        ],
+        title: const Text("Delete this Project"),
+        content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Re-Enter Project's name 2 times to continue",
+                style: TextStyle(color: Colors.black.withOpacity(0.5)),
+              ),
+              const Gap(5),
+              Center(
+                child: Text(
+                  c.projectDump.value.name,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w700),
+                ),
+              ),
+              Form(
+                key: formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: projectConfirmation1TextFieldController,
+                      autofocus: true,
+                      validator: (value) {
+                        if (value == null ||
+                            value.isEmpty ||
+                            value != c.projectDump.value.name) {
+                          return "You're saved!";
+                        }
+                        return null;
+                      },
+                    ),
+                    TextFormField(
+                      controller: projectConfirmation2TextFieldController,
+                      autofocus: true,
+                      validator: (value) {
+                        if (value == null ||
+                            value.isEmpty ||
+                            value != c.projectDump.value.name) {
+                          return "You're saved!";
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const Gap(15),
+              const Text(
+                "All data in this Project will be destroyed!",
+                style: TextStyle(color: Colors.red),
+              ),
+            ]));
   }
 
   Widget personalizeField(BuildContext context, colorTheme, Project project,
@@ -529,7 +635,7 @@ class ProjectDetail extends StatelessWidget {
                           }
                           a.switchIsProjectDescriptionEditing(false);
                         },
-                        child: Text("Save"),
+                        child: const Text("Save"),
                       ),
                     ],
                   ),

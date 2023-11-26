@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
+import 'package:aray/app/modules/projects/controller/controller_project.dart';
+import 'package:aray/app/modules/projects/controller/crud_controller_project.dart';
 
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -86,6 +89,13 @@ class ProjectDetailAnimationController extends GetxController {
 class ProjectDetailController extends GetxController {
   final args = <String, dynamic>{}.obs;
   final workspace = Workspace(name: '').obs;
+  final projectDump = Project(
+          name: '',
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+          personalize: {},
+          order: 1)
+      .obs;
 
   set args(value) => args.value = value;
 
@@ -103,6 +113,11 @@ class ProjectDetailController extends GetxController {
       workspaceRef().collection('project').doc(projectId()).withConverter(
           fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
           toFirestore: (Project project, _) => project.toJson());
+
+  CollectionReference<CardModel> cardsRef() =>
+      projectRef().collection('card').withConverter(
+          fromFirestore: (snapshot, _) => CardModel.fromJson(snapshot.data()!),
+          toFirestore: (CardModel card, _) => card.toJson());
 
   Future<void> updateCoverImageDominantColor(
       String projectCoverImageUrl) async {
@@ -193,7 +208,7 @@ class ProjectDetailController extends GetxController {
     String projectCoverImageFileName =
         Timestamp.now().toString() + projectCoverImageFile.path.split('/').last;
     final projectCoverImageStorageRef = FirebaseStorage.instance.ref().child(
-        'user/public/projects/project_$projectId/cover/$projectCoverImageFileName');
+        'user/public/projects/project_${projectId()}/cover/$projectCoverImageFileName');
 
     final uploadProjectCoverImage = await projectCoverImageStorageRef.putFile(
         projectCoverImageFile,
@@ -207,7 +222,7 @@ class ProjectDetailController extends GetxController {
 
       try {
         final projectCoverImageStorageRef = FirebaseStorage.instance.ref().child(
-            'user/public/projects/project_$projectId/cover/$oldProjectCoverImageFileName');
+            'user/public/projects/project_${projectId()}/cover/$oldProjectCoverImageFileName');
         await projectCoverImageStorageRef.delete();
       } catch (e) {}
 
@@ -229,7 +244,7 @@ class ProjectDetailController extends GetxController {
     final personalize = project.personalize;
     final projectCoverImageFileName = personalize['image'] as String;
     final projectCoverImageStorageRef = FirebaseStorage.instance.ref().child(
-        'user/public/projects/project_$projectId/cover/$projectCoverImageFileName');
+        'user/public/projects/project_${projectId()}/cover/$projectCoverImageFileName');
 
     await projectCoverImageStorageRef.delete();
     personalize['image'] = '';
@@ -238,5 +253,29 @@ class ProjectDetailController extends GetxController {
 
     // Set image to ''
     updateProjectUseImage(false);
+  }
+
+  Future<void> deleteProject() async {
+    // await ProjectCRUDController.delete(projectRef());
+    // Delete Project Cover
+    await deleteProjectCoverImage();
+    // Saatnya menyelam
+    final cardsSnapshot = await cardsRef().get();
+    final cardsDocumentSnapshot = cardsSnapshot.docs;
+
+    // Menyelam Card
+    List<String> cardsId = [];
+    for (var cardSnapshot in cardsDocumentSnapshot) {
+      final cardId = cardSnapshot.id;
+      cardsId.add(cardId);
+    }
+
+    // Menyelam activity
+    for (var cardId in cardsId) {
+      try {
+        final projectController = Get.put(ProjectController());
+        await projectController.deleteCard(cardId);
+      } catch (e) {}
+    }
   }
 }
