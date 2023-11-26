@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:aray/app/data/model/model_activity.dart';
 import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:aray/app/modules/projects/controller/controller_project.dart';
+import 'package:aray/app/modules/projects/controller/crud_controller_card.dart';
 import 'package:aray/app/modules/projects/controller/crud_controller_project.dart';
 
 import 'package:firebase_storage/firebase_storage.dart';
@@ -118,6 +120,11 @@ class ProjectDetailController extends GetxController {
       projectRef().collection('card').withConverter(
           fromFirestore: (snapshot, _) => CardModel.fromJson(snapshot.data()!),
           toFirestore: (CardModel card, _) => card.toJson());
+
+  CollectionReference<Activity> activitiesRef(String cardId) =>
+      cardsRef().doc(cardId).collection('activity').withConverter(
+          fromFirestore: (snapshot, _) => Activity.fromJson(snapshot.data()!),
+          toFirestore: (Activity activity, _) => activity.toJson());
 
   Future<void> updateCoverImageDominantColor(
       String projectCoverImageUrl) async {
@@ -256,9 +263,10 @@ class ProjectDetailController extends GetxController {
   }
 
   Future<void> deleteProject() async {
-    // await ProjectCRUDController.delete(projectRef());
     // Delete Project Cover
-    await deleteProjectCoverImage();
+    try {
+      await deleteProjectCoverImage();
+    } catch (e) {}
     // Saatnya menyelam
     final cardsSnapshot = await cardsRef().get();
     final cardsDocumentSnapshot = cardsSnapshot.docs;
@@ -273,9 +281,21 @@ class ProjectDetailController extends GetxController {
     // Menyelam activity
     for (var cardId in cardsId) {
       try {
-        final projectController = Get.put(ProjectController());
-        await projectController.deleteCard(cardId);
+        List<Reference> activitiesStorageRef = [];
+        final activitiesSnapshot = await activitiesRef(cardId).get();
+        final activitiesDocumentSnaphsot = activitiesSnapshot.docs;
+        for (var activitySnapshot in activitiesDocumentSnaphsot) {
+          // Generate the activity storageref
+          final activityId = activitySnapshot.id;
+          final Reference ref = FirebaseStorage.instance.ref().child(
+              'user/public/projects/project_${projectId()}/activity_$activityId');
+          activitiesStorageRef.add(ref);
+        }
+
+        final reference = cardsRef().doc(cardId);
+        await CardCRUDController.delete(reference, activitiesStorageRef);
       } catch (e) {}
     }
+    await ProjectCRUDController.delete(projectRef());
   }
 }
