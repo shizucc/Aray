@@ -1,6 +1,5 @@
 import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/modules/activity/controller/crud_controller_activity.dart';
-import 'package:aray/app/modules/activity/controller/crud_controller_activity_file.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
@@ -25,7 +24,6 @@ class CardCRUDController {
       List<Reference> activitiesStorageReferences) async {
     await reference.delete();
 
-    // Loop activity in this card
     deleteOnlyCardActivitiesCoverAndFiles(activitiesStorageReferences);
   }
 

@@ -84,9 +84,25 @@ class ProjectDetailAnimationController extends GetxController {
 }
 
 class ProjectDetailController extends GetxController {
+  final args = <String, dynamic>{}.obs;
   final workspace = Workspace(name: '').obs;
-  final workspaceId = ''.obs;
-  final projectId = ''.obs;
+
+  set args(value) => args.value = value;
+
+  String projectId() => args['projectId'] ?? "";
+  String workspaceId() => args['workspaceId'] ?? "";
+
+  DocumentReference<Workspace> workspaceRef() => FirebaseFirestore.instance
+      .collection('workspace')
+      .doc(workspaceId())
+      .withConverter(
+          fromFirestore: (snapshot, _) => Workspace.fromJson(snapshot.data()!),
+          toFirestore: (Workspace workspace, _) => workspace.toJson());
+
+  DocumentReference<Project> projectRef() =>
+      workspaceRef().collection('project').doc(projectId()).withConverter(
+          fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
+          toFirestore: (Project project, _) => project.toJson());
 
   Future<void> updateCoverImageDominantColor(
       String projectCoverImageUrl) async {
@@ -96,74 +112,37 @@ class ProjectDetailController extends GetxController {
     final projectCoverImageDominantColor =
         palleteGenerator.dominantColor!.color;
 
-    final projectRef = FirebaseFirestore.instance
-        .collection('workspace')
-        .doc(workspaceId.value)
-        .collection('project')
-        .doc(projectId.value)
-        .withConverter(
-            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
-            toFirestore: (Project project, _) => project.toJson());
-    final projectData = await projectRef.get();
+    final projectData = await projectRef().get();
     final personalize = projectData.data()!.personalize;
 
     personalize['image_dominant_color'] = projectCoverImageDominantColor.value;
-    final updateProject = await projectRef.update({'personalize': personalize});
+    final updateProject =
+        await projectRef().update({'personalize': personalize});
     // return myColor;
   }
 
   Future<void> updateProjectCoverImageLink(
       String projectCoverImageLink, String projectCoverImageFileName) async {
-    final projectRef = FirebaseFirestore.instance
-        .collection('workspace')
-        .doc(workspaceId.value)
-        .collection('project')
-        .doc(projectId.value)
-        .withConverter(
-            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
-            toFirestore: (Project project, _) => project.toJson());
-    final projectData = await projectRef.get();
+    final projectData = await projectRef().get();
     final personalize = projectData.data()!.personalize;
     personalize['image'] = projectCoverImageFileName;
     personalize['image_link'] = projectCoverImageLink;
-    final updateProject = await projectRef.update({'personalize': personalize});
+    final updateProject =
+        await projectRef().update({'personalize': personalize});
   }
 
   Future<void> refreshProjectUpdatedAt() async {
-    FirebaseFirestore.instance
-        .collection('workspace')
-        .doc(workspaceId.value)
-        .collection('project')
-        .doc(projectId.value)
+    await projectRef()
         .update({'updated_at': Timestamp.fromDate(DateTime.now())});
   }
 
-  Stream<DocumentSnapshot<Project>> streamProject(
-      String workspaceId, String projectId) async* {
-    // Set Workspace ID and Project Id
-    this.workspaceId.value = workspaceId;
-    this.projectId.value = projectId;
-    final workspaceRef = FirebaseFirestore.instance
-        .collection('workspace')
-        .doc(workspaceId)
-        .withConverter(
-            fromFirestore: (snapshot, _) =>
-                Workspace.fromJson(snapshot.data()!),
-            toFirestore: (Workspace workspace, _) => workspace.toJson());
-
+  Stream<DocumentSnapshot<Project>> streamProject() async* {
     // set Workspace
 
-    final workspace = await workspaceRef.get();
+    final workspace = await workspaceRef().get();
     this.workspace.value = workspace.data()!;
 
-    final projectRef = workspaceRef
-        .collection('project')
-        .doc(projectId)
-        .withConverter(
-            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
-            toFirestore: (Project project, _) => project.toJson());
-
-    final Stream<DocumentSnapshot<Project>> project = projectRef.snapshots();
+    final Stream<DocumentSnapshot<Project>> project = projectRef().snapshots();
 
     yield* project;
   }
@@ -176,63 +155,37 @@ class ProjectDetailController extends GetxController {
     };
     final value = textEditingController.text;
 
-    final updateProject = await FirebaseFirestore.instance
-        .collection('workspace')
-        .doc(workspaceId.value)
-        .collection('project')
-        .doc(projectId.value)
-        .update({fields[field].toString(): value}).then((value) {
+    await projectRef().update({fields[field].toString(): value}).then((value) {
       refreshProjectUpdatedAt();
     });
   }
 
   Future<void> updateProjectPersonalizeColor(String colorCode) async {
-    final projectRef = FirebaseFirestore.instance
-        .collection('workspace')
-        .doc(workspaceId.value)
-        .collection('project')
-        .doc(projectId.value)
-        .withConverter(
-            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
-            toFirestore: (Project project, _) => project.toJson());
-    final projectData = await projectRef.get();
+    final projectData = await projectRef().get();
     final personalize = projectData.data()!.personalize;
     personalize['color'] = colorCode;
 
     // update
-    final updateProject = await projectRef.update({'personalize': personalize});
+    final updateProject =
+        await projectRef().update({'personalize': personalize});
   }
 
   Future<void> updateProjectImageDominantColor(int colorDecimal) async {
-    final projectRef = FirebaseFirestore.instance
-        .collection('workspace')
-        .doc(workspaceId.value)
-        .collection('project')
-        .doc(projectId.value)
-        .withConverter(
-            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
-            toFirestore: (Project project, _) => project.toJson());
-    final projectData = await projectRef.get();
+    final projectData = await projectRef().get();
     final personalize = projectData.data()!.personalize;
 
     personalize['image_dominant_color'] = colorDecimal;
-    final updateProject = await projectRef.update({'personalize': personalize});
+    final updateProject =
+        await projectRef().update({'personalize': personalize});
   }
 
   Future<void> updateProjectUseImage(bool isUseImage) async {
-    final projectRef = FirebaseFirestore.instance
-        .collection('workspace')
-        .doc(workspaceId.value)
-        .collection('project')
-        .doc(projectId.value)
-        .withConverter(
-            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
-            toFirestore: (Project project, _) => project.toJson());
-    final projectData = await projectRef.get();
+    final projectData = await projectRef().get();
     final personalize = projectData.data()!.personalize;
 
     personalize['use_image'] = isUseImage;
-    final updateProject = await projectRef.update({'personalize': personalize});
+    final updateProject =
+        await projectRef().update({'personalize': personalize});
   }
 
   Future<bool> updateProjectCoverImage(
@@ -270,16 +223,7 @@ class ProjectDetailController extends GetxController {
   }
 
   Future<void> deleteProjectCoverImage() async {
-    final projectRef = FirebaseFirestore.instance
-        .collection('workspace')
-        .doc(workspaceId.value)
-        .collection('project')
-        .doc(projectId.value)
-        .withConverter(
-            fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
-            toFirestore: (Project project, _) => project.toJson());
-
-    final projectSnapshot = await projectRef.get();
+    final projectSnapshot = await projectRef().get();
     final Project project = projectSnapshot.data()!;
 
     final personalize = project.personalize;
@@ -289,7 +233,8 @@ class ProjectDetailController extends GetxController {
 
     await projectCoverImageStorageRef.delete();
     personalize['image'] = '';
-    final updateProject = await projectRef.update({'personalize': personalize});
+    final updateProject =
+        await projectRef().update({'personalize': personalize});
 
     // Set image to ''
     updateProjectUseImage(false);

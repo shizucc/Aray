@@ -1,10 +1,10 @@
 import 'package:aray/app/data/model/model_workspace.dart';
-import 'package:aray/app/modules/workspaces/controller/animation_controller_workspace.dart';
 import 'package:aray/app/modules/workspaces/controller/controller_workspace.dart';
 import 'package:aray/app/routes/app_pages.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 
 class WorkspacePage extends StatelessWidget {
@@ -12,6 +12,7 @@ class WorkspacePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final a = Get.put(WorkspaceAnimationController());
     final c = Get.put(WorkspaceController());
     c.fetchWorkspaces();
     return Scaffold(
@@ -46,10 +47,155 @@ class WorkspacePage extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        child: const Icon(CupertinoIcons.add),
-      ),
+          onPressed: () {},
+          child: PopupMenuButton(
+            icon: const Icon(Icons.add),
+            itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+              PopupMenuItem(
+                value: 'add_new_project',
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => addProjectDialog(context, a, c),
+                  );
+                },
+                child: const Text('Add New Project'),
+              ),
+              PopupMenuItem(
+                value: 'add_new_workspace',
+                onTap: () {},
+                child: const Text('Add New Workspace'),
+              ),
+            ],
+          )),
     );
+  }
+
+  AlertDialog addProjectDialog(BuildContext context,
+      WorkspaceAnimationController a, WorkspaceController c) {
+    final formKey = GlobalKey<FormState>();
+    final projectNameTextFieldController = TextEditingController();
+    return AlertDialog(
+        actions: [
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child:
+                  const Text("Cancel", style: TextStyle(color: Colors.black))),
+          TextButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  final projectName = projectNameTextFieldController.value.text;
+                  c.addNewProject(projectName);
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text(
+                "Add",
+                style: TextStyle(color: Colors.blue),
+              ))
+        ],
+        title: const Text("Add New Project"),
+        // titleTextStyle: const TextStyle(fontSize: 16, color: Colors.black),
+        content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Enter the name of the project"),
+              Form(
+                key: formKey,
+                child: TextFormField(
+                  controller: projectNameTextFieldController,
+                  autofocus: true,
+                  maxLength: 30,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Project name cannot be empty!';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const Gap(5),
+              const Text("Select Workspace to place the project"),
+              // DropdownButton(
+              //   value: '2',
+              //   menuMaxHeight: Get.height / 2,
+              //   items: <String>[
+              //     '1',
+              //     '2',
+              //     '3',
+              //     '4',
+              //     '5',
+              //     '6',
+              //     '7',
+              //     '8',
+              //     '9',
+              //     '10',
+              //     '11',
+              //     '12',
+              //     '13',
+              //     '14',
+              //     '15',
+              //     '16',
+              //     '17'
+              //   ].map<DropdownMenuItem<String>>((String value) {
+              //     return DropdownMenuItem<String>(
+              //       value: value,
+              //       child: Text(value),
+              //     );
+              //   }).toList(),
+              //   onChanged: (value) {},
+              // ),
+              const Gap(15),
+              FutureBuilder(
+                future: c.getAllowedWorkspaceNewProject(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Container();
+                  } else if (snapshot.hasError) {
+                    return Text("Error: ${snapshot.error}");
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "You're not allowed to any workspace",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                        Text("Create or join a workspace!"),
+                      ],
+                    );
+                  }
+                  final workspacesSnapshots = snapshot.data!;
+                  final List<DropdownMenuItem> workspacesMenuItems =
+                      workspacesSnapshots.map(
+                    (workspaceSnapshot) {
+                      final String workspaceName =
+                          workspaceSnapshot.data()!.name ?? '';
+                      return DropdownMenuItem(
+                          value: workspaceSnapshot.id,
+                          child: Text(workspaceName));
+                    },
+                  ).toList();
+
+                  return DropdownButton(
+                    value: c.selectedWorkspaceIdAddProject.value,
+                    items: workspacesMenuItems,
+                    onChanged: (value) {
+                      c.selectedWorkspaceIdAddProject = value as String;
+                    },
+                  );
+                },
+              ),
+              const Gap(15),
+              Text(
+                "You must be 'Creator' or 'Co-Creator' of the Workspace",
+                style: TextStyle(color: Colors.black.withOpacity(0.5)),
+              )
+            ]));
   }
 }
 
@@ -127,7 +273,8 @@ class WorskpaceList extends StatelessWidget {
                                                 'workspaceId': workspace.id
                                               });
                                         },
-                                        icon: Icon(CupertinoIcons.ellipsis)),
+                                        icon: const Icon(
+                                            CupertinoIcons.ellipsis)),
                                     const SizedBox(width: 15)
                                   ],
                                 ),
@@ -198,7 +345,7 @@ class ProjectTile extends StatelessWidget {
                 decoration: BoxDecoration(
                     color: Colors.grey.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(10)),
-                child: Icon(Icons.alarm)),
+                child: const Icon(Icons.alarm)),
             const SizedBox(
               width: 15,
             ),

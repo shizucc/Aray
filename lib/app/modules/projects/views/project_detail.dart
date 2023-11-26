@@ -10,7 +10,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:image_picker/image_picker.dart';
 
 class ProjectDetail extends StatelessWidget {
   const ProjectDetail({super.key});
@@ -19,8 +18,9 @@ class ProjectDetail extends StatelessWidget {
   Widget build(BuildContext context) {
     final a = Get.put(ProjectDetailAnimationController());
     final c = Get.put(ProjectDetailController());
-    final projectId = Get.arguments['projectId'];
-    final workspaceId = Get.arguments['workspaceId'];
+
+    // Init the arguments
+    c.args = Get.arguments;
 
     return Scaffold(
       appBar: AppBar(
@@ -34,7 +34,7 @@ class ProjectDetail extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 45),
           child: StreamBuilder<DocumentSnapshot<Project>>(
-            stream: c.streamProject(workspaceId, projectId),
+            stream: c.streamProject(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return const Text('Something went wrong');
@@ -47,7 +47,7 @@ class ProjectDetail extends StatelessWidget {
 
               final ColorTheme colorTheme =
                   ColorTheme(code: project?.personalize['color']);
-              a.initPersonalize(c, project!, projectId, workspaceId);
+              a.initPersonalize(c, project!, c.projectId(), c.workspaceId());
 
               return GestureDetector(
                 onTap: () {
@@ -75,7 +75,7 @@ class ProjectDetail extends StatelessWidget {
                     const SizedBox(
                       height: 5,
                     ),
-                    Obx(() => projectDescriptionField(a, c, project!)),
+                    Obx(() => projectDescriptionField(a, c, project)),
                     const SizedBox(
                       height: 20,
                     ),
