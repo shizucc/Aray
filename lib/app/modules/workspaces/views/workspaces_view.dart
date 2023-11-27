@@ -76,7 +76,12 @@ class _WorkspacePageState extends State<WorkspacePage> {
               ),
               PopupMenuItem(
                 value: 'add_new_workspace',
-                onTap: () {},
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => addWorkspaceDialog(context, a, c),
+                  );
+                },
                 child: const Text('Add New Workspace'),
               ),
             ],
@@ -116,7 +121,7 @@ class _WorkspacePageState extends State<WorkspacePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text("Enter the name of the project"),
+              const Text("Enter the name of project"),
               Form(
                 key: formKey,
                 child: TextFormField(
@@ -182,6 +187,58 @@ class _WorkspacePageState extends State<WorkspacePage> {
               )
             ]));
   }
+
+  AlertDialog addWorkspaceDialog(BuildContext context,
+      WorkspaceAnimationController a, WorkspaceController c) {
+    final formKey = GlobalKey<FormState>();
+    final workspaceNameTextFieldController = TextEditingController();
+    return AlertDialog(
+        actions: [
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child:
+                  const Text("Cancel", style: TextStyle(color: Colors.black))),
+          TextButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  final workspaceName =
+                      workspaceNameTextFieldController.value.text;
+                  c.addNewWorkspace(workspaceName);
+
+                  Navigator.pop(context);
+                  setState(() {});
+                }
+              },
+              child: const Text(
+                "Add",
+                style: TextStyle(color: Colors.blue),
+              ))
+        ],
+        title: const Text("Add New Workspace"),
+        // titleTextStyle: const TextStyle(fontSize: 16, color: Colors.black),
+        content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Enter the name of workspace"),
+              Form(
+                key: formKey,
+                child: TextFormField(
+                  controller: workspaceNameTextFieldController,
+                  autofocus: true,
+                  maxLength: 30,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Workspace name cannot be empty!';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ]));
+  }
 }
 
 class WorskpaceList extends StatelessWidget {
@@ -216,81 +273,74 @@ class WorskpaceList extends StatelessWidget {
                         return const CircularProgressIndicator();
                       } else if (projectSnapshot.hasError) {
                         return Text("Error: ${projectSnapshot.error}");
-                      } else if (!projectSnapshot.hasData ||
-                          projectSnapshot.data!.isEmpty) {
-                        return const Text("Invalid Name");
-                      } else {
-                        final projectList = projectSnapshot.data;
-                        return Obx(() => Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    IconButton(
-                                        onPressed: () {
-                                          a.switchPanel(
-                                              index, !a.isOpen(index));
-                                        },
-                                        icon: a.isOpen(index)
-                                            ? const Icon(
-                                                CupertinoIcons.chevron_up,
-                                                size: 25,
-                                              )
-                                            : const Icon(
-                                                CupertinoIcons.chevron_down,
-                                                size: 25,
-                                              )),
-                                    const SizedBox(
-                                      width: 10,
-                                    ),
-                                    Expanded(
-                                      child: Text(
-                                        workspaceName.toString(),
-                                        style: const TextStyle(
-                                            fontSize: 22,
-                                            fontWeight: FontWeight.w500),
-                                      ),
-                                    ),
-                                    IconButton(
-                                        onPressed: () {
-                                          print("Tombol  ditekan");
-                                          Get.toNamed('/workspace/detail',
-                                              arguments: {
-                                                'workspaceId': workspace.id
-                                              });
-                                        },
-                                        icon: const Icon(
-                                            CupertinoIcons.ellipsis)),
-                                    const SizedBox(width: 15)
-                                  ],
-                                ),
-                                AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  child: a.isOpen(index) == true
-                                      ? Column(
-                                          children: projectList!.map((project) {
-                                            return ProjectTile(
-                                                title: project.data().name,
-                                                image:
-                                                    project.data().personalize[
-                                                            'image_link'] ??
-                                                        '',
-                                                onTap: () {
-                                                  Get.toNamed(Routes.PROJECT,
-                                                      arguments: {
-                                                        "project":
-                                                            project.data(),
-                                                        "workspace_id":
-                                                            workspace.id,
-                                                        "project_id": project.id
-                                                      });
-                                                });
-                                          }).toList(),
-                                        )
-                                      : null,
-                                )
-                              ],
-                            ));
                       }
+                      final projectList = projectSnapshot.data;
+                      return Obx(() => Column(
+                            children: [
+                              Row(
+                                children: [
+                                  IconButton(
+                                      onPressed: () {
+                                        a.switchPanel(index, !a.isOpen(index));
+                                      },
+                                      icon: a.isOpen(index)
+                                          ? const Icon(
+                                              CupertinoIcons.chevron_up,
+                                              size: 25,
+                                            )
+                                          : const Icon(
+                                              CupertinoIcons.chevron_down,
+                                              size: 25,
+                                            )),
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      workspaceName.toString(),
+                                      style: const TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                  IconButton(
+                                      onPressed: () {
+                                        print("Tombol  ditekan");
+                                        Get.toNamed('/workspace/detail',
+                                            arguments: {
+                                              'workspaceId': workspace.id
+                                            });
+                                      },
+                                      icon:
+                                          const Icon(CupertinoIcons.ellipsis)),
+                                  const SizedBox(width: 15)
+                                ],
+                              ),
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                child: a.isOpen(index) == true
+                                    ? Column(
+                                        children: projectList!.map((project) {
+                                          return ProjectTile(
+                                              title: project.data().name,
+                                              image: project.data().personalize[
+                                                      'image_link'] ??
+                                                  '',
+                                              onTap: () {
+                                                Get.toNamed(Routes.PROJECT,
+                                                    arguments: {
+                                                      "project": project.data(),
+                                                      "workspace_id":
+                                                          workspace.id,
+                                                      "project_id": project.id
+                                                    });
+                                              });
+                                        }).toList(),
+                                      )
+                                    : null,
+                              )
+                            ],
+                          ));
                     }));
               }
             });

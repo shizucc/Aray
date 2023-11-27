@@ -2,6 +2,7 @@ import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_user_workspace.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:aray/app/modules/projects/controller/crud_controller_project.dart';
+import 'package:aray/app/modules/workspaces/controller/crud_controller_workspace.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -154,5 +155,16 @@ class WorkspaceController extends GetxController {
         },
         order: 1);
     await ProjectCRUDController.addNew(projectRef, project);
+  }
+
+  // Operation for workspace
+  Future<void> addNewWorkspace(String workspaceName) async {
+    final Workspace workspace = Workspace(
+        name: workspaceName,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now());
+    final userIdDump = await userId();
+    await WorkspaceCRUDController.addNew(
+        userWorkspacesRef(), workspacesRef(), workspace, userIdDump);
   }
 }
