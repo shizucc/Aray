@@ -61,13 +61,12 @@ class WorkspaceController extends GetxController {
           fromFirestore: (snapshot, _) => Workspace.fromJson(snapshot.data()!),
           toFirestore: (Workspace workspace, _) => workspace.toJson());
 
-  void logOutWithGoogle() async {
+  Future<void> logOutWithGoogle() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('userId');
     final GoogleSignIn googleSignIn = GoogleSignIn();
     await googleSignIn.signOut();
-    FirebaseAuth.instance.signOut();
-
-    await prefs.remove('userId');
+    await FirebaseAuth.instance.signOut();
   }
 
   Future<String> getWorkspaceName(DocumentReference<Workspace> docs) async {

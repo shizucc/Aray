@@ -35,7 +35,7 @@ class LoginPageController extends GetxController {
     UserCredential userCredential =
         await FirebaseAuth.instance.signInWithCredential(credential);
 
-    checkUser(userCredential);
+    await checkUser(userCredential);
   }
 
   // Fungsi untuk mengecek User sudah terdaftar atau belum (jika belum masukan ke database)
@@ -47,7 +47,7 @@ class LoginPageController extends GetxController {
         .where('username', isEqualTo: userCredential.user?.displayName)
         .where('email', isEqualTo: userCredential.user?.email)
         .get();
-
+    await setSession(username.docs.first.id);
     if (username.docs.isNotEmpty) {
     } else {
       userRef
@@ -57,6 +57,5 @@ class LoginPageController extends GetxController {
               joinDate: DateTime.now()))
           .then((_) {});
     }
-    setSession(username.docs.first.id);
   }
 }

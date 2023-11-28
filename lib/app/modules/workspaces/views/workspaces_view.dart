@@ -20,16 +20,10 @@ class _WorkspacePageState extends State<WorkspacePage> {
     final a = Get.put(WorkspaceAnimationController());
     final c = Get.put(WorkspaceController());
     c.setUserId();
-    c.fetchWorkspaces();
     return Scaffold(
       appBar: AppBar(
         // leading: const Icon(Icons.menu),
         title: const Text("Projects"),
-        actions: [
-          IconButton(
-              onPressed: () => c.logOutWithGoogle(),
-              icon: const Icon(Icons.power))
-        ],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -104,7 +98,9 @@ class _WorkspacePageState extends State<WorkspacePage> {
                     icon: Icon(Icons.notifications),
                     label: Text("Notifications")),
                 TextButton.icon(
-                    onPressed: () {},
+                    onPressed: () async {
+                      await c.logOutWithGoogle();
+                    },
                     style: ButtonStyle(
                       alignment: Alignment.centerLeft,
                     ),
@@ -442,7 +438,10 @@ class ProjectTile extends StatelessWidget {
                 decoration: BoxDecoration(
                     color: Colors.grey.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(10)),
-                child: const Icon(Icons.alarm)),
+                child: const Icon(
+                  Icons.alarm,
+                  color: Colors.transparent,
+                )),
             const SizedBox(
               width: 15,
             ),
