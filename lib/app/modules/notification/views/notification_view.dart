@@ -1,239 +1,152 @@
+import 'package:aray/app/data/model/model_invitation.dart';
+import 'package:aray/app/global_widgets/loading_text.dart';
+import 'package:aray/app/modules/notification/controller/controller_notification.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
+import 'package:get/get.dart';
 
 class NotificationView extends StatelessWidget {
   const NotificationView({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final a = Get.find<NotificationAnimationController>();
+    final c = Get.find<NotificationController>();
     return Scaffold(
       appBar: AppBar(
         shadowColor: Colors.black,
-        title: const Text("Notification"),
+        title: const Text("Notifications"),
       ),
       body: Container(
-        margin: const EdgeInsets.only(left: 40, right: 40, bottom: 40),
-        child: Column(
-          children: [
-            Row(
+        margin: const EdgeInsets.only(left: 40, right: 40),
+        child: SingleChildScrollView(
+            child: StreamBuilder(
+          stream: c.streamInvitations(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(
+                child: LoadingText(labelText: "Crunching your notifications"),
+              );
+            } else if (snapshot.hasError) {
+              return const Center(
+                child: Text("An error encountered"),
+              );
+            } else if (snapshot.data!.docs.isEmpty) {
+              return const Center(
+                child: Text("Empty"),
+              );
+            }
+            final invitationsSnapshot = snapshot.data!.docs;
+            final List<NotificationTile> notificationsTile =
+                invitationsSnapshot.map(
+              (invitationSnapshot) {
+                return NotificationTile(
+                  invitationSnapshot: invitationSnapshot,
+                );
+              },
+            ).toList();
+            return Container(
+              child: Column(
+                children: notificationsTile,
+              ),
+            );
+          },
+        )),
+      ),
+    );
+  }
+}
+
+class NotificationTile extends StatelessWidget {
+  const NotificationTile({super.key, required this.invitationSnapshot});
+
+  final QueryDocumentSnapshot<Invitation> invitationSnapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = Get.find<NotificationController>();
+    final Invitation invitation = invitationSnapshot.data();
+    final bool isInvitationResponded = invitation.status != '';
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      child: Row(
+        children: [
+          const Icon(Icons.mail),
+          const Gap(15),
+          Expanded(
+            child: Column(
               children: [
-                Text(
-                  "New",
-                  style: TextStyle(
-                      color: Colors.black.withOpacity(0.5), fontSize: 20),
+                Row(
+                  children: [
+                    Expanded(
+                        child: RichText(
+                            text: TextSpan(
+                                style: const TextStyle(color: Colors.black),
+                                children: [
+                          TextSpan(
+                              text: "${invitation.senderName} ",
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600)),
+                          TextSpan(
+                            style:
+                                TextStyle(color: Colors.black.withOpacity(0.6)),
+                            text: "invites you to join ",
+                          ),
+                          TextSpan(
+                              text: "${invitation.workspaceName} ",
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w600)),
+                          TextSpan(
+                            style:
+                                TextStyle(color: Colors.black.withOpacity(0.6)),
+                            text: "workspace",
+                          ),
+                        ])))
+                  ],
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: !isInvitationResponded
+                          ? Row(
+                              children: [
+                                TextButton(
+                                    onPressed: () {
+                                      c.acceptInvitation(invitationSnapshot);
+                                    },
+                                    child: const Text("Accept")),
+                                TextButton(
+                                    onPressed: () {
+                                      c.deleteInvitation(invitationSnapshot.id);
+                                    },
+                                    child: const Text("Delete",
+                                        style: TextStyle(color: Colors.black))),
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    child: Text(
+                                        "Status : ${invitation.status.capitalizeFirst!}"),
+                                  ),
+                                ),
+                                TextButton(
+                                    onPressed: () {
+                                      c.deleteInvitation(invitationSnapshot.id);
+                                    },
+                                    child: const Text("Delete",
+                                        style: TextStyle(color: Colors.black)))
+                              ],
+                            ),
+                    ),
+                  ],
                 )
               ],
             ),
-            Row(
-              children: [
-                CircleAvatar(
-                  maxRadius: 18,
-                  child: Image.network(
-                      fit: BoxFit.cover,
-                      "https://i.pinimg.com/originals/c1/dc/be/c1dcbe1bce28a1551dbd262aa97ca007.jpg"),
-                ),
-                const SizedBox(width: 10),
-                const Expanded(
-                    child: Text(
-                        style: TextStyle(fontSize: 15),
-                        'Yudith Nico Priambodo invites you to join "Endour Studio" workspace')),
-              ],
-            ),
-            Container(
-              margin: const EdgeInsets.only(top: 10, bottom: 30),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(style: TextStyle(fontSize: 12), "Accept"),
-                          ],
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 233, 238, 251),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 20,
-                      ),
-                      Container(
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(style: TextStyle(fontSize: 12), "Decline"),
-                          ],
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 251, 233, 233),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 70,
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(left: 50),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                                style: TextStyle(
-                                    fontSize: 9,
-                                    color: Colors.black.withOpacity(0.5)),
-                                "12.21"),
-                            Text(
-                                style: TextStyle(
-                                    fontSize: 9,
-                                    color: Colors.black.withOpacity(0.5)),
-                                "12-31-23"),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Row(
-              children: [
-                Text(
-                  "All",
-                  style: TextStyle(
-                      color: Colors.black.withOpacity(0.5), fontSize: 20),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                CircleAvatar(
-                  maxRadius: 18,
-                  child: Image.network(
-                      fit: BoxFit.cover,
-                      "https://i.pinimg.com/originals/c1/dc/be/c1dcbe1bce28a1551dbd262aa97ca007.jpg"),
-                ),
-                const SizedBox(width: 10),
-                const Expanded(
-                    child: Text(
-                        style: TextStyle(fontSize: 15),
-                        'Yudith Nico Priambodo invites you to join "Endour Studio" workspace')),
-              ],
-            ),
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        child: const Row(
-                          children: [
-                            Text(style: TextStyle(fontSize: 12), "Accepted"),
-                          ],
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 233, 238, 251),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 120,
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(left: 47),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Column(
-                              children: [
-                                Text(
-                                    style: TextStyle(
-                                        fontSize: 9,
-                                        color: Colors.black.withOpacity(0.5)),
-                                    "12.21"),
-                                Text(
-                                    style: TextStyle(
-                                        fontSize: 9,
-                                        color: Colors.black.withOpacity(0.5)),
-                                    "12-31-23"),
-                              ],
-                            )
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Row(
-              children: [
-                CircleAvatar(
-                  maxRadius: 18,
-                  child: Image.network(
-                      fit: BoxFit.cover,
-                      "https://i.pinimg.com/originals/c1/dc/be/c1dcbe1bce28a1551dbd262aa97ca007.jpg"),
-                ),
-                const SizedBox(width: 10),
-                const Expanded(
-                    child: Text(
-                        style: TextStyle(fontSize: 15),
-                        'Yudith Nico Priambodo invites you to join "Endour Studio" workspace')),
-              ],
-            ),
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        child: const Row(
-                          children: [
-                            Text(style: TextStyle(fontSize: 12), "Declined"),
-                          ],
-                        ),
-                        decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 251, 233, 233),
-                          borderRadius: BorderRadius.circular(18),
-                        ),
-                      ),
-                      const SizedBox(
-                        width: 120,
-                      ),
-                      Container(
-                        margin: const EdgeInsets.only(left: 50),
-                        child: Row(
-                          children: [
-                            Column(
-                              children: [
-                                Text(
-                                    style: TextStyle(
-                                        fontSize: 9,
-                                        color: Colors.black.withOpacity(0.5)),
-                                    "12.21"),
-                                Text(
-                                    style: TextStyle(
-                                        fontSize: 9,
-                                        color: Colors.black.withOpacity(0.5)),
-                                    "12-31-23"),
-                              ],
-                            )
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          )
+        ],
       ),
     );
   }

@@ -81,7 +81,7 @@ class WorkspaceContent extends StatelessWidget {
               //Kotak deskripsi Workspace
               WorkspaceDescriptionField(workspace: workspace),
               //Kotak Collaborator
-              WorkspaceCollaboratorField(),
+              WorkspaceCollaboratorField(workspace: workspace),
               //Kotak Boards
             ],
           ),
@@ -92,10 +92,8 @@ class WorkspaceContent extends StatelessWidget {
 }
 
 class WorkspaceCollaboratorField extends StatelessWidget {
-  const WorkspaceCollaboratorField({
-    super.key,
-  });
-
+  const WorkspaceCollaboratorField({super.key, required this.workspace});
+  final Workspace workspace;
   @override
   Widget build(BuildContext context) {
     final c = Get.find<WorkspaceDetailController>();
@@ -204,7 +202,7 @@ class WorkspaceCollaboratorField extends StatelessWidget {
                     showDialog(
                       context: context,
                       builder: (context) =>
-                          removeMembershipDialog(context, a, c),
+                          removeMembershipDialog(context, userSnapshot, a, c),
                     );
                   },
                 ),
@@ -214,8 +212,11 @@ class WorkspaceCollaboratorField extends StatelessWidget {
     );
   }
 
-  AlertDialog removeMembershipDialog(BuildContext context,
-      WorkspaceDetailAnimationController a, WorkspaceDetailController c) {
+  AlertDialog removeMembershipDialog(
+      BuildContext context,
+      DocumentSnapshot<UserModel> userSnapshot,
+      WorkspaceDetailAnimationController a,
+      WorkspaceDetailController c) {
     return AlertDialog(
         actions: [
           TextButton(
@@ -225,7 +226,10 @@ class WorkspaceCollaboratorField extends StatelessWidget {
               child:
                   const Text("Cancel", style: TextStyle(color: Colors.black))),
           TextButton(
-              onPressed: () async {},
+              onPressed: () async {
+                c.removeWorkspaceMember(userSnapshot.id);
+                Get.offAllNamed('/workspace');
+              },
               child: const Text(
                 "Remove",
                 style: TextStyle(color: Colors.red),
@@ -252,7 +256,7 @@ class WorkspaceCollaboratorField extends StatelessWidget {
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   final userEmail = userEmailTextFieldController.value.text;
-                  c.addWorkspaceMember(userEmail);
+                  c.sendInvitationWorkspaceMember(userEmail, workspace.name!);
                   Navigator.pop(context);
                 }
               },
@@ -273,7 +277,6 @@ class WorkspaceCollaboratorField extends StatelessWidget {
                 child: TextFormField(
                   controller: userEmailTextFieldController,
                   autofocus: true,
-                  maxLength: 30,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Email cannot be empty!';

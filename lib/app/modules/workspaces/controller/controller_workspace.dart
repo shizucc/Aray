@@ -37,13 +37,16 @@ class WorkspaceAnimationController extends GetxController {
 class WorkspaceController extends GetxController {
   final RxString selectedWorkspaceIdAddProject = ''.obs;
   final User? user = FirebaseAuth.instance.currentUser;
-
+  final RxString userId = ''.obs;
   set selectedWorkspaceIdAddProject(value) =>
       selectedWorkspaceIdAddProject.value = value;
-  Future<String> userId() async {
+
+  set userId(value) => userId.value = value;
+
+  Future<void> setUserId() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final userId = prefs.get('userId') as String;
-    return userId;
+    final userIdFromPrefs = prefs.get('userId') as String;
+    userId = userIdFromPrefs;
   }
 
   CollectionReference<UserWorkspace> userWorkspacesRef() =>
@@ -111,7 +114,7 @@ class WorkspaceController extends GetxController {
       getAllowedWorkspaceNewProject() async {
     final List<String> allowedToCreate = ['creator', 'co-creator'];
     final allowedUserWorkspacesSnapshot = await userWorkspacesRef()
-        .where('user_id', isEqualTo: await userId())
+        .where('user_id', isEqualTo: userId.value)
         .where('permission', whereIn: allowedToCreate)
         .get();
 
@@ -163,7 +166,7 @@ class WorkspaceController extends GetxController {
         name: workspaceName,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now());
-    final userIdDump = await userId();
+    final userIdDump = userId.value;
     await WorkspaceCRUDController.addNew(
         userWorkspacesRef(), workspacesRef(), workspace, userIdDump);
   }

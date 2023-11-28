@@ -19,10 +19,11 @@ class _WorkspacePageState extends State<WorkspacePage> {
   Widget build(BuildContext context) {
     final a = Get.put(WorkspaceAnimationController());
     final c = Get.put(WorkspaceController());
-    // c.fetchWorkspaces();
+    c.setUserId();
+    c.fetchWorkspaces();
     return Scaffold(
       appBar: AppBar(
-        leading: const Icon(Icons.menu),
+        // leading: const Icon(Icons.menu),
         title: const Text("Projects"),
         actions: [
           IconButton(
@@ -56,6 +57,67 @@ class _WorkspacePageState extends State<WorkspacePage> {
                 );
               }
             },
+          ),
+        ),
+      ),
+      drawer: Drawer(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: Get.height),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            child: ListView(
+              children: [
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: ClipOval(
+                          child: Image.network(
+                            c.user!.photoURL!,
+                            height: 75,
+                            width: 75,
+                          ),
+                        ),
+                      ),
+                      Gap(15),
+                      Text(
+                        "${c.user!.displayName}",
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.w700),
+                      ),
+                      Text("${c.user!.email}",
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.black.withOpacity(0.5))),
+                    ],
+                  ),
+                ),
+                Gap(15),
+                TextButton.icon(
+                    onPressed: () {
+                      Get.toNamed('/notification');
+                    },
+                    style: ButtonStyle(alignment: Alignment.centerLeft),
+                    icon: Icon(Icons.notifications),
+                    label: Text("Notifications")),
+                TextButton.icon(
+                    onPressed: () {},
+                    style: ButtonStyle(
+                      alignment: Alignment.centerLeft,
+                    ),
+                    icon: Icon(
+                      Icons.exit_to_app,
+                      color: Colors.black,
+                    ),
+                    label: Text(
+                      "Log Out",
+                      style: TextStyle(color: Colors.black),
+                    )),
+              ],
+            ),
           ),
         ),
       ),

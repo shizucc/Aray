@@ -1,9 +1,13 @@
+import 'package:aray/app/data/model/model_invitation.dart';
 import 'package:aray/app/data/model/model_user.dart';
 import 'package:aray/app/data/model/model_user_workspace.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
+import 'package:aray/app/modules/notification/controller/controller_notification.dart';
+import 'package:aray/app/modules/notification/controller/crud_controller_notification.dart';
 import 'package:aray/app/modules/workspaces/controller/crud_controller_user_workspace.dart';
 import 'package:aray/app/modules/workspaces/controller/crud_controller_workspace.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -32,6 +36,7 @@ class WorkspaceDetailAnimationController extends GetxController {
 
 class WorkspaceDetailController extends GetxController {
   final workspaceId = ''.obs;
+  final User? user = FirebaseAuth.instance.currentUser;
 
   Future<String> userId() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -50,6 +55,17 @@ class WorkspaceDetailController extends GetxController {
       FirebaseFirestore.instance.collection('user').withConverter(
           fromFirestore: (snapshot, _) => UserModel.fromJson(snapshot.data()!),
           toFirestore: (UserModel user, _) => user.toJson());
+
+  CollectionReference<Invitation> invitationsRef(String userId) {
+    final invitationsRef = usersRef()
+        .doc(userId)
+        .collection("invitation")
+        .withConverter(
+            fromFirestore: (snapshot, _) =>
+                Invitation.fromJson(snapshot.data()!),
+            toFirestore: (Invitation user, _) => user.toJson());
+    return invitationsRef;
+  }
 
   DocumentReference<Workspace> workspaceRef(String workspaceId) =>
       FirebaseFirestore.instance
@@ -122,5 +138,38 @@ class WorkspaceDetailController extends GetxController {
     final userId = userSnapshot.id;
     await UserWorkspaceCRUDController.join(
         userWorkspacesRef(), workspaceId.value, userId);
+  }
+
+  Future<void> sendInvitationWorkspaceMember(
+      String email, String workspaceName) async {
+    final userQuery = await usersRef().where('email', isEqualTo: email).get();
+
+    final userSnapshot = userQuery.docs.first;
+
+    final userIdTarget = userSnapshot.id;
+
+    final Invitation invitation = Invitation(
+        senderName: user!.displayName!,
+        senderEmail: user!.email!,
+        status: '',
+        createdAt: DateTime.now(),
+        workspaceId: workspaceId.value,
+        workspaceName: workspaceName);
+
+    await NotificationCRUDController.addNew(
+        invitationsRef(userIdTarget), invitation);
+  }
+
+  Future<void> removeWorkspaceMember(String userId) async {
+    final userWorkspacesSnapshot = await userWorkspacesRef()
+        .where('user_id', isEqualTo: userId)
+        .where('workspace_id', isEqualTo: workspaceId.value)
+        .get();
+
+    final userWorkspaceSnapshot = userWorkspacesSnapshot.docs.first;
+    final userWorkspaceId = userWorkspaceSnapshot.id;
+
+    final ref = userWorkspacesRef().doc(userWorkspaceId);
+    await UserWorkspaceCRUDController.leave(ref);
   }
 }
