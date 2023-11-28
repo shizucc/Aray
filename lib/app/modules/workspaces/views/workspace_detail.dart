@@ -127,7 +127,7 @@ class WorkspaceCollaboratorField extends StatelessWidget {
             final userRole = user['userRole'] as String;
             final userSnapshot =
                 user['userSnapshot'] as DocumentSnapshot<UserModel>;
-            return memberTile(userSnapshot, userRole);
+            return memberTile(userSnapshot, userRole, c, a);
           }).toList();
           return Column(
             children: usersTile,
@@ -145,10 +145,15 @@ class WorkspaceCollaboratorField extends StatelessWidget {
                 width: 140,
                 height: 30,
                 child: FilledButton.icon(
-                  onPressed: () {},
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => addMemberDialog(context, a, c),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 0),
-                  ),
+                      padding: const EdgeInsets.symmetric(horizontal: 0),
+                      backgroundColor: Colors.deepPurple.withOpacity(0.5)),
                   icon: const Icon(
                     Icons.add,
                     size: 20.0,
@@ -161,36 +166,14 @@ class WorkspaceCollaboratorField extends StatelessWidget {
                 ),
               ),
             ),
-            Container(
-              child: SizedBox(
-                width: 108,
-                height: 30,
-                child: FilledButton.icon(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    primary: const Color.fromARGB(255, 222, 177, 230),
-                    padding: const EdgeInsets.symmetric(horizontal: 0),
-                  ),
-                  icon: const Icon(
-                    Icons.arrow_drop_down,
-                    size: 20.0,
-                    color: Colors.black54,
-                  ),
-                  label: const Text(
-                    'See All',
-                    style: TextStyle(fontSize: 12, color: Colors.black54),
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
       ),
     ]);
   }
 
-  ListTile memberTile(
-      DocumentSnapshot<UserModel> userSnapshot, String userRole) {
+  ListTile memberTile(DocumentSnapshot<UserModel> userSnapshot, String userRole,
+      WorkspaceDetailController c, WorkspaceDetailAnimationController a) {
     final UserModel user = userSnapshot.data()!;
     final bool isCreator = userRole == "creator";
     return ListTile(
@@ -213,16 +196,20 @@ class WorkspaceCollaboratorField extends StatelessWidget {
                 size: 15,
               ),
               itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                    const PopupMenuItem(
-                      value: 'End This Workspace',
-                      // ignore: unnecessary_const
-                      child: Text('Remove',
-                          style: TextStyle(color: Color(0xffFF0000))),
-                    ),
-                  ],
-              onSelected: (dynamic value) {
-                print(value);
-              })
+                PopupMenuItem(
+                  value: 'remove_membership',
+                  child: const Text('Remove',
+                      style: TextStyle(color: Color(0xffFF0000))),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) =>
+                          removeMembershipDialog(context, a, c),
+                    );
+                  },
+                ),
+              ],
+            )
           : null,
     );
   }
@@ -241,12 +228,64 @@ class WorkspaceCollaboratorField extends StatelessWidget {
               onPressed: () async {},
               child: const Text(
                 "Remove",
-                style: TextStyle(color: Colors.blue),
+                style: TextStyle(color: Colors.red),
               ))
         ],
         title: const Text("Remove Membership"),
         // titleTextStyle: const TextStyle(fontSize: 16, color: Colors.black),
         content: Text("This member can be invited again"));
+  }
+
+  AlertDialog addMemberDialog(BuildContext context,
+      WorkspaceDetailAnimationController a, WorkspaceDetailController c) {
+    final formKey = GlobalKey<FormState>();
+    final userEmailTextFieldController = TextEditingController();
+    return AlertDialog(
+        actions: [
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child:
+                  const Text("Cancel", style: TextStyle(color: Colors.black))),
+          TextButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  final userEmail = userEmailTextFieldController.value.text;
+                  c.addWorkspaceMember(userEmail);
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text(
+                "Invite",
+                style: TextStyle(color: Colors.blue),
+              ))
+        ],
+        title: const Text("Add Member to this workspace"),
+        // titleTextStyle: const TextStyle(fontSize: 16, color: Colors.black),
+        content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text("Enter Email Address"),
+              Form(
+                key: formKey,
+                child: TextFormField(
+                  controller: userEmailTextFieldController,
+                  autofocus: true,
+                  maxLength: 30,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Email cannot be empty!';
+                    }
+                    if (!value.isEmail) {
+                      return 'Enter a valid email!';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ]));
   }
 }
 
@@ -282,7 +321,7 @@ class WorkspaceDescriptionField extends StatelessWidget {
                       a.setDefaultValueTextfield(
                           a.workspaceDescriptionController,
                           workspace.description!);
-                      a.switcIsWorkspaceDescriptionEditing(true);
+                      a.switchIsWorkspaceDescriptionEditing(true);
                     },
                     child: a.isWorkspaceDescriptionEditing.value
                         ? TextField(
@@ -293,9 +332,9 @@ class WorkspaceDescriptionField extends StatelessWidget {
                               color: Colors.black,
                             ),
                             onEditingComplete: () {
-                              c.updateProjectFromTextField('description',
+                              c.updateWorkspaceFromTextField('description',
                                   a.workspaceDescriptionController);
-                              a.switcIsWorkspaceDescriptionEditing(false);
+                              a.switchIsWorkspaceDescriptionEditing(false);
                             },
                           )
                         : Text(
@@ -355,7 +394,7 @@ class WorkspaceNameField extends StatelessWidget {
                               color: Colors.black,
                             ),
                             onEditingComplete: () {
-                              c.updateProjectFromTextField(
+                              c.updateWorkspaceFromTextField(
                                   'name', a.workspaceNameController);
                               a.switchIsWorkspaceNameEditing(false);
                             },

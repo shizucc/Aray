@@ -3,6 +3,8 @@ import 'package:aray/app/modules/activity/views/activity_detail.dart';
 import 'package:aray/app/modules/activity/views/activity_view.dart';
 import 'package:aray/app/modules/auth/bindings/bindings_login_page.dart';
 import 'package:aray/app/modules/auth/views/login_page.dart';
+import 'package:aray/app/modules/notification/bindings/bindings_notification_view.dart';
+import 'package:aray/app/modules/notification/views/notification_view.dart';
 import 'package:aray/app/modules/projects/bindings/bindings_project.dart';
 import 'package:aray/app/modules/projects/bindings/bindings_project_detail.dart';
 import 'package:aray/app/modules/projects/views/project_detail.dart';
@@ -40,5 +42,9 @@ class AppPages {
         name: _Paths.ACTIVITYDETAIL,
         page: () => const ActivityDetail(),
         binding: ActivityDetailBinding()),
+    GetPage(
+        name: _Paths.NOTIFICATION,
+        page: () => const NotificationView(),
+        binding: NotificationBinding())
   ];
 }

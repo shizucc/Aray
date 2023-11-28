@@ -1,10 +1,12 @@
 import 'package:aray/app/data/model/model_user.dart';
 import 'package:aray/app/data/model/model_user_workspace.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
+import 'package:aray/app/modules/workspaces/controller/crud_controller_user_workspace.dart';
 import 'package:aray/app/modules/workspaces/controller/crud_controller_workspace.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WorkspaceDetailAnimationController extends GetxController {
   final isWorkspaceNameEditing = false.obs;
@@ -23,13 +25,19 @@ class WorkspaceDetailAnimationController extends GetxController {
     isWorkspaceNameEditing.value = value;
   }
 
-  void switcIsWorkspaceDescriptionEditing(bool value) {
+  void switchIsWorkspaceDescriptionEditing(bool value) {
     isWorkspaceDescriptionEditing.value = value;
   }
 }
 
 class WorkspaceDetailController extends GetxController {
   final workspaceId = ''.obs;
+
+  Future<String> userId() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final userId = prefs.get('userId') as String;
+    return userId;
+  }
 
   CollectionReference<UserWorkspace> userWorkspacesRef() =>
       FirebaseFirestore.instance.collection('user_workspace').withConverter(
@@ -71,16 +79,13 @@ class WorkspaceDetailController extends GetxController {
       final userMember = {'userId': userId, 'userRole': userRole};
       usersDump.add(userMember);
     }
-    // print(users);
 
-    // print('object');
-    // print(users);
     final List<Map<String, dynamic>> users = [];
     for (var user in usersDump) {
       final userId = user['userId'];
 
       final userSnapshot = await usersRef().doc(userId).get();
-      // user.remove('userId');
+
       final userMap = {
         'userSnapshot': userSnapshot,
         'userRole': user['userRole']
@@ -90,7 +95,7 @@ class WorkspaceDetailController extends GetxController {
     return users;
   }
 
-  Future<void> updateProjectFromTextField(
+  Future<void> updateWorkspaceFromTextField(
       String field, TextEditingController textEditingController) async {
     final value = textEditingController.text;
 
@@ -105,5 +110,17 @@ class WorkspaceDetailController extends GetxController {
         break;
       default:
     }
+  }
+
+  Future<void> addWorkspaceMember(String email) async {
+    // Search userId with email
+
+    final userQuery = await usersRef().where('email', isEqualTo: email).get();
+
+    final userSnapshot = userQuery.docs.first;
+
+    final userId = userSnapshot.id;
+    await UserWorkspaceCRUDController.join(
+        userWorkspacesRef(), workspaceId.value, userId);
   }
 }

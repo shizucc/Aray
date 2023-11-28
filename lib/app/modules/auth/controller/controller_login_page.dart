@@ -19,7 +19,6 @@ class LoginPageController extends GetxController {
   Future<void> setSession(String id) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('userId', id);
-    print("Session Saved");
   }
 
   // Fungsi untuk login by gogle
@@ -50,13 +49,12 @@ class LoginPageController extends GetxController {
         .get();
 
     if (username.docs.isNotEmpty) {
-      print(username.docs.first.data().email);
-      print(username.docs.first.id);
     } else {
       userRef
           .add(UserModel(
-              email: userCredential.user?.email,
-              username: userCredential.user?.displayName))
+              email: userCredential.user!.email!,
+              username: userCredential.user!.displayName!,
+              joinDate: DateTime.now()))
           .then((_) {});
     }
     setSession(username.docs.first.id);
