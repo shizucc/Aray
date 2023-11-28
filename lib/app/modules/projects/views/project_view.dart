@@ -135,12 +135,77 @@ class ProjectView extends StatelessWidget {
                   stream: c.streamCards(),
                   builder: (context, snapshot) {
                     if (snapshot.hasError) {
-                      return Text(snapshot.error.toString());
+                      return Center(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 30),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 20),
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.4),
+                              borderRadius: BorderRadius.circular(10)),
+                          child: Text(
+                            "An error occurred while loading your card",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.red.withOpacity(0.6)),
+                          ),
+                        ),
+                      );
+                    }
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 30),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 20),
+                          decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.4),
+                              borderRadius: BorderRadius.circular(10)),
+                          child: Text(
+                            "Crunching your cards",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontSize: 18,
+                                fontStyle: FontStyle.italic,
+                                color: Colors.black.withOpacity(0.6)),
+                          ),
+                        ),
+                      );
+                    } else if (snapshot.data!.docs.isEmpty) {
+                      return Center(
+                          child: Container(
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 30),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 20),
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10)),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    "Let's Start by creating a new card!",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        color: Colors.black.withOpacity(0.5)),
+                                  ),
+                                  TextButton(
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) =>
+                                              addCardDialog(context, a, c),
+                                        );
+                                      },
+                                      child: Text("Add New Card"))
+                                ],
+                              )));
                     }
 
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator();
-                    }
                     final cardsSnapshot = snapshot.data!;
                     return ProjectCards(
                       cardsSnapshot: cardsSnapshot,
@@ -498,11 +563,15 @@ class ProjectActivities extends StatelessWidget {
         stream: c.streamActivities(cardSnapshot.id),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const Text('Something went wrong');
+            return Text(
+              'An error occurred while loading your activity',
+              style: TextStyle(color: Colors.red.withOpacity(0.8)),
+            );
           }
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const CircularProgressIndicator();
+            return Container();
           }
+
           final QuerySnapshot<Activity> activitySnapshot = snapshot.data!;
           return projectActivity(context, activitySnapshot, c, a);
         },

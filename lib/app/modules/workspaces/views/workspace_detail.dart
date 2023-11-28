@@ -1,5 +1,6 @@
 import 'package:aray/app/data/model/model_user.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
+import 'package:aray/app/global_widgets/loading_text.dart';
 import 'package:aray/app/modules/workspaces/controller/controller_workspace.dart';
 import 'package:aray/app/modules/workspaces/controller/controller_workspace_detail.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -8,9 +9,14 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:get/get.dart';
 
-class WorkspaceDetail extends StatelessWidget {
+class WorkspaceDetail extends StatefulWidget {
   const WorkspaceDetail({super.key});
 
+  @override
+  State<WorkspaceDetail> createState() => _WorkspaceDetailState();
+}
+
+class _WorkspaceDetailState extends State<WorkspaceDetail> {
   @override
   Widget build(BuildContext context) {
     final a = Get.put(WorkspaceDetailAnimationController());
@@ -25,34 +31,96 @@ class WorkspaceDetail extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(right: 20.0),
               child: PopupMenuButton(
-                  icon: const Icon(Icons.more_horiz),
-                  itemBuilder: (BuildContext context) => <PopupMenuEntry>[
-                        const PopupMenuItem(
-                          value: 'End This Workspace',
-                          // ignore: unnecessary_const
-                          child: Text('End This Workspace',
-                              style: TextStyle(color: Color(0xffFF0000))),
-                        ),
-                      ],
-                  onSelected: (dynamic value) {
-                    print(value);
-                  }),
+                icon: const Icon(Icons.more_horiz),
+                itemBuilder: (BuildContext context) => <PopupMenuEntry>[
+                  PopupMenuItem(
+                    value: 'End This Workspace',
+                    // ignore: unnecessary_const
+                    child: Text('End This Workspace',
+                        style: TextStyle(color: Color(0xffFF0000))),
+                    onTap: () async {
+                      final bool isDeletable =
+                          await c.getIsWorkspaceDeletable();
+
+                      isDeletable
+                          ? showDialog(
+                              context: context,
+                              builder: (context) =>
+                                  deleteWorkspaceDialog(context, a, c),
+                            )
+                          : showDialog(
+                              context: context,
+                              builder: (context) =>
+                                  deleteWorkspaceDialogFail(context, a, c),
+                            );
+                    },
+                  ),
+                ],
+              ),
             )
           ],
         ),
-        body: StreamBuilder(
-            stream: c.streamWorkspace(workspaceId),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
-              } else if (snapshot.hasError) {
-                return const Text("Terdapat Error");
-              } else {
-                final workspaceSnapshot = snapshot.data!;
-                final workspace = workspaceSnapshot.data()!;
-                return WorkspaceContent(a: a, workspace: workspace, c: c);
-              }
-            }));
+        body: RefreshIndicator(
+          onRefresh: () async {
+            setState(() {});
+          },
+          child: StreamBuilder(
+              stream: c.streamWorkspace(workspaceId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: LoadingText(labelText: "Crunching your data..."),
+                  );
+                } else if (snapshot.hasError) {
+                  return const Center(
+                      child: Text(
+                          "An error occurred while loading your workspace details"));
+                } else {
+                  final workspaceSnapshot = snapshot.data!;
+                  final workspace = workspaceSnapshot.data()!;
+                  return WorkspaceContent(a: a, workspace: workspace, c: c);
+                }
+              }),
+        ));
+  }
+
+  AlertDialog deleteWorkspaceDialog(BuildContext context,
+      WorkspaceDetailAnimationController a, WorkspaceDetailController c) {
+    return AlertDialog(
+        actions: [
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child:
+                  const Text("Cancel", style: TextStyle(color: Colors.black))),
+          TextButton(
+              onPressed: () async {
+                c.deleteWorkspace();
+                Get.offAllNamed('/workspace');
+              },
+              child: const Text(
+                "Delete",
+                style: TextStyle(color: Colors.red),
+              ))
+        ],
+        title: const Text("Delete this Workspace"),
+        content: const Text("This Method cannot be undone"));
+  }
+
+  AlertDialog deleteWorkspaceDialogFail(BuildContext context,
+      WorkspaceDetailAnimationController a, WorkspaceDetailController c) {
+    return AlertDialog(
+        actions: [
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child:
+                  const Text("Cancel", style: TextStyle(color: Colors.black))),
+        ],
+        title: const Text("Cannot delete this Workspace"),
+        content: Text("There are still several projects in this workspace!"));
   }
 }
 
@@ -107,7 +175,7 @@ class WorkspaceCollaboratorField extends StatelessWidget {
           style: TextStyle(color: Colors.black38, fontSize: 12),
         ),
       )),
-      Gap(10),
+      const Gap(10),
       FutureBuilder(
         future: c.getWorkspaceMembers(),
         builder: (context, snapshot) {
@@ -127,8 +195,11 @@ class WorkspaceCollaboratorField extends StatelessWidget {
                 user['userSnapshot'] as DocumentSnapshot<UserModel>;
             return memberTile(userSnapshot, userRole, c, a);
           }).toList();
-          return Column(
-            children: usersTile,
+          return Container(
+            margin: const EdgeInsets.symmetric(horizontal: 5),
+            child: Column(
+              children: usersTile,
+            ),
           );
         },
       ),
@@ -176,9 +247,13 @@ class WorkspaceCollaboratorField extends StatelessWidget {
     final bool isCreator = userRole == "creator";
     return ListTile(
       contentPadding: const EdgeInsets.only(left: 0.0, right: 0.0),
-      leading: Icon(CupertinoIcons.square),
+      leading: const Icon(
+        CupertinoIcons.circle_fill,
+        size: 7,
+      ),
       title: RichText(
-          text: TextSpan(style: TextStyle(color: Colors.black), children: [
+          text:
+              TextSpan(style: const TextStyle(color: Colors.black), children: [
         TextSpan(text: "${user.username} "),
         TextSpan(
           style: TextStyle(
@@ -237,7 +312,7 @@ class WorkspaceCollaboratorField extends StatelessWidget {
         ],
         title: const Text("Remove Membership"),
         // titleTextStyle: const TextStyle(fontSize: 16, color: Colors.black),
-        content: Text("This member can be invited again"));
+        content: const Text("This member can be invited again"));
   }
 
   AlertDialog addMemberDialog(BuildContext context,
@@ -266,7 +341,6 @@ class WorkspaceCollaboratorField extends StatelessWidget {
               ))
         ],
         title: const Text("Add Member to this workspace"),
-        // titleTextStyle: const TextStyle(fontSize: 16, color: Colors.black),
         content: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
@@ -316,38 +390,48 @@ class WorkspaceDescriptionField extends StatelessWidget {
               style: TextStyle(color: Colors.black38, fontSize: 12),
             ),
           )),
-          Obx(() => Container(
-              child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: GestureDetector(
-                    onTap: () {
-                      a.setDefaultValueTextfield(
-                          a.workspaceDescriptionController,
-                          workspace.description!);
-                      a.switchIsWorkspaceDescriptionEditing(true);
-                    },
-                    child: a.isWorkspaceDescriptionEditing.value
-                        ? TextField(
-                            autofocus: true,
-                            controller: a.workspaceDescriptionController,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black,
-                            ),
-                            onEditingComplete: () {
-                              c.updateWorkspaceFromTextField('description',
-                                  a.workspaceDescriptionController);
-                              a.switchIsWorkspaceDescriptionEditing(false);
-                            },
-                          )
-                        : Text(
-                            (workspace.description!),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.black,
-                            ),
-                          ),
-                  )))),
+          Obx(() {
+            final bool isDescriptionEmpty = workspace.description!.isEmpty;
+            return Container(
+                child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: GestureDetector(
+                      onTap: () {
+                        a.setDefaultValueTextfield(
+                            a.workspaceDescriptionController,
+                            workspace.description!);
+                        a.switchIsWorkspaceDescriptionEditing(true);
+                      },
+                      child: a.isWorkspaceDescriptionEditing.value
+                          ? TextField(
+                              autofocus: true,
+                              controller: a.workspaceDescriptionController,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black,
+                              ),
+                              onEditingComplete: () {
+                                c.updateWorkspaceFromTextField('description',
+                                    a.workspaceDescriptionController);
+                                a.switchIsWorkspaceDescriptionEditing(false);
+                              },
+                            )
+                          : isDescriptionEmpty
+                              ? Text(
+                                  "Add Workspace Description",
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.black.withOpacity(0.5)),
+                                )
+                              : Text(
+                                  (workspace.description!),
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                    )));
+          }),
         ],
       ),
     );
@@ -366,6 +450,7 @@ class WorkspaceNameField extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = Get.find<WorkspaceDetailController>();
     final a = Get.find<WorkspaceDetailAnimationController>();
+    final bool isWorkspaceNameEmpty = workspace.name!.isEmpty;
     return Container(
       margin: const EdgeInsets.only(bottom: 20.0),
       child: Column(
@@ -378,37 +463,41 @@ class WorkspaceNameField extends StatelessWidget {
               style: TextStyle(color: Colors.black38, fontSize: 12),
             ),
           )),
-          Obx(() => Container(
-              child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: GestureDetector(
-                    onTap: () {
-                      a.setDefaultValueTextfield(
-                          a.workspaceNameController, workspace.name!);
-                      a.switchIsWorkspaceNameEditing(true);
-                    },
-                    child: a.isWorkspaceNameEditing.value
-                        ? TextField(
-                            autofocus: true,
-                            controller: a.workspaceNameController,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            ),
-                            onEditingComplete: () {
-                              c.updateWorkspaceFromTextField(
-                                  'name', a.workspaceNameController);
-                              a.switchIsWorkspaceNameEditing(false);
-                            },
-                          )
-                        : Text(workspace.name!,
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.black,
-                            )),
-                  )))),
+          Obx(() {
+            return Container(
+                child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: GestureDetector(
+                      onTap: () {
+                        a.setDefaultValueTextfield(
+                            a.workspaceNameController, workspace.name!);
+                        a.switchIsWorkspaceNameEditing(true);
+                      },
+                      child: a.isWorkspaceNameEditing.value
+                          ? TextField(
+                              autofocus: true,
+                              controller: a.workspaceNameController,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                              onEditingComplete: () {
+                                c.updateWorkspaceFromTextField(
+                                    'name', a.workspaceNameController);
+                                a.switchIsWorkspaceNameEditing(false);
+                              },
+                            )
+                          : isWorkspaceNameEmpty
+                              ? const Text("Add Workspace Name")
+                              : Text(workspace.name!,
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black,
+                                  )),
+                    )));
+          }),
         ],
       ),
     );

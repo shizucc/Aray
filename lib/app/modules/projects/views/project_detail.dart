@@ -1,5 +1,6 @@
 import 'package:aray/app/data/model/model_color_theme.dart';
 import 'package:aray/app/data/model/model_project.dart';
+import 'package:aray/app/global_widgets/loading_text.dart';
 import 'package:aray/app/modules/projects/controller/controller_project_detail.dart';
 import 'package:aray/app/modules/projects/widgets/show_dialog_delete_cover.dart';
 import 'package:aray/utils/extension.dart';
@@ -29,13 +30,6 @@ class ProjectDetail extends StatelessWidget {
             icon: const Icon(CupertinoIcons.ellipsis_vertical),
             itemBuilder: (BuildContext context) => <PopupMenuEntry>[
               PopupMenuItem(
-                value: 'Move this Project',
-                onTap: () {
-                  // Method to add new card
-                },
-                child: const Text('Move this Project'),
-              ),
-              PopupMenuItem(
                 value: 'End this Project',
                 onTap: () {
                   showDialog(
@@ -54,15 +48,17 @@ class ProjectDetail extends StatelessWidget {
       ),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 45),
+          padding: const EdgeInsets.symmetric(horizontal: 45),
           child: StreamBuilder<DocumentSnapshot<Project>>(
             stream: c.streamProject(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return const Text('Something went wrong');
+                return Center(child: const Text('Something went wrong'));
               }
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
+                return const Center(
+                  child: LoadingText(labelText: "Crunching your data..."),
+                );
               }
               final projectSnapshot = snapshot.data;
               final Project project = projectSnapshot!.data()!;

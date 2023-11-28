@@ -25,12 +25,16 @@ class WorkspaceCRUDController {
 
   static Future<void> updateDescription(
       DocumentReference<Workspace> reference, String description) async {
-    await reference.update({'name': description});
+    await reference.update({'description': description});
     await refreshUpdatedAt(reference);
   }
 
   static Future<void> refreshUpdatedAt(
       DocumentReference<Workspace> reference) async {
     await reference.update({'updated_at': Timestamp.fromDate(DateTime.now())});
+  }
+
+  static Future<void> delete(DocumentReference<Workspace> reference) async {
+    await reference.delete();
   }
 }

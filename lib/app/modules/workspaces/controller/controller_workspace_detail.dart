@@ -1,4 +1,5 @@
 import 'package:aray/app/data/model/model_invitation.dart';
+import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_user.dart';
 import 'package:aray/app/data/model/model_user_workspace.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
@@ -75,6 +76,11 @@ class WorkspaceDetailController extends GetxController {
               fromFirestore: (snapshot, _) =>
                   Workspace.fromJson(snapshot.data()!),
               toFirestore: (Workspace workspace, _) => workspace.toJson());
+
+  CollectionReference<Project> projectsRef(String workspaceId) =>
+      workspaceRef(workspaceId).collection('project').withConverter(
+          fromFirestore: (snapshot, _) => Project.fromJson(snapshot.data()!),
+          toFirestore: (Project project, _) => project.toJson());
 
   Stream<DocumentSnapshot<Workspace>> streamWorkspace(String id) async* {
     final workspace = workspaceRef(id).snapshots();
@@ -171,5 +177,32 @@ class WorkspaceDetailController extends GetxController {
 
     final ref = userWorkspacesRef().doc(userWorkspaceId);
     await UserWorkspaceCRUDController.leave(ref);
+  }
+
+  Future<bool> getIsWorkspaceDeletable() async {
+    final projectsQuerySnapshot = await projectsRef(workspaceId.value).get();
+    final projects = projectsQuerySnapshot.docs;
+    if (projects.isEmpty) {
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> deleteWorkspace() async {
+    final userWorkspacesSnapshot = await userWorkspacesRef()
+        .where('workspace_id', isEqualTo: workspaceId.value)
+        .get();
+
+    final List<String> userWorkspacesId = [];
+    for (var userWorkspaceSnapshot in userWorkspacesSnapshot.docs) {
+      final userWorkspaceId = userWorkspaceSnapshot.id;
+      userWorkspacesId.add(userWorkspaceId);
+    }
+    for (var userWorkspaceId in userWorkspacesId) {
+      final ref = userWorkspacesRef().doc(userWorkspaceId);
+      await UserWorkspaceCRUDController.leave(ref);
+    }
+    final wokspaceRef = workspaceRef(workspaceId.value);
+    await WorkspaceCRUDController.delete(wokspaceRef);
   }
 }

@@ -1,4 +1,6 @@
 import 'package:aray/app/data/model/model_workspace.dart';
+import 'package:aray/app/global_widgets/loading_box.dart';
+import 'package:aray/app/global_widgets/loading_text.dart';
 import 'package:aray/app/modules/workspaces/controller/controller_workspace.dart';
 import 'package:aray/app/routes/app_pages.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -38,11 +40,34 @@ class _WorkspacePageState extends State<WorkspacePage> {
             future: c.fetchWorkspaces(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Container();
+                return const Center(
+                  child: LoadingText(labelText: "Crunching your projects..."),
+                );
               } else if (snapshot.hasError) {
-                return Text("Error: ${snapshot.error}");
+                return const Center(
+                  child: Text("An error occurred while loading your projects"),
+                );
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Text("Tidak ada data.");
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "Let's Start by create or join a workspace!",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 20, color: Colors.black.withOpacity(0.5)),
+                    ),
+                    TextButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) =>
+                                addWorkspaceDialog(context, a, c),
+                          );
+                        },
+                        child: const Text("Add New Workspace"))
+                  ],
+                );
               } else {
                 final workspaces = snapshot.data!;
                 return Padding(
@@ -58,11 +83,11 @@ class _WorkspacePageState extends State<WorkspacePage> {
         child: ConstrainedBox(
           constraints: BoxConstraints(maxHeight: Get.height),
           child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
             child: ListView(
               children: [
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -76,10 +101,10 @@ class _WorkspacePageState extends State<WorkspacePage> {
                           ),
                         ),
                       ),
-                      Gap(15),
+                      const Gap(15),
                       Text(
                         "${c.user!.displayName}",
-                        style: TextStyle(
+                        style: const TextStyle(
                             fontSize: 18, fontWeight: FontWeight.w700),
                       ),
                       Text("${c.user!.email}",
@@ -89,26 +114,29 @@ class _WorkspacePageState extends State<WorkspacePage> {
                     ],
                   ),
                 ),
-                Gap(15),
+                const Gap(15),
                 TextButton.icon(
                     onPressed: () {
                       Get.toNamed('/notification');
                     },
-                    style: ButtonStyle(alignment: Alignment.centerLeft),
-                    icon: Icon(Icons.notifications),
-                    label: Text("Notifications")),
+                    style: const ButtonStyle(alignment: Alignment.centerLeft),
+                    icon: const Icon(Icons.notifications),
+                    label: const Text("Notifications")),
                 TextButton.icon(
-                    onPressed: () async {
-                      await c.logOutWithGoogle();
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => logoutDialog(c),
+                      );
                     },
-                    style: ButtonStyle(
+                    style: const ButtonStyle(
                       alignment: Alignment.centerLeft,
                     ),
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.exit_to_app,
                       color: Colors.black,
                     ),
-                    label: Text(
+                    label: const Text(
                       "Log Out",
                       style: TextStyle(color: Colors.black),
                     )),
@@ -147,6 +175,30 @@ class _WorkspacePageState extends State<WorkspacePage> {
     );
   }
 
+  AlertDialog logoutDialog(WorkspaceController c) {
+    return AlertDialog(
+        actions: [
+          TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child:
+                  const Text("Cancel", style: TextStyle(color: Colors.black))),
+          TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await c.logOutWithGoogle();
+              },
+              child: const Text(
+                "Logout",
+                style: TextStyle(color: Colors.red),
+              ))
+        ],
+        title: const Text("Logout"),
+        // titleTextStyle: const TextStyle(fontSize: 16, color: Colors.black),
+        content: const Text("Are you sure you want to log out?"));
+  }
+
   AlertDialog addProjectDialog(BuildContext context,
       WorkspaceAnimationController a, WorkspaceController c) {
     final formKey = GlobalKey<FormState>();
@@ -163,7 +215,7 @@ class _WorkspacePageState extends State<WorkspacePage> {
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   final projectName = projectNameTextFieldController.value.text;
-                  c.addNewProject(projectName);
+                  await c.addNewProject(projectName);
                   Navigator.pop(context);
                   setState(() {});
                 }
@@ -204,7 +256,7 @@ class _WorkspacePageState extends State<WorkspacePage> {
                     return Container();
                   } else if (snapshot.hasError) {
                     return Text("Error: ${snapshot.error}");
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  } else if (snapshot.data!.isEmpty) {
                     return const Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
@@ -263,7 +315,7 @@ class _WorkspacePageState extends State<WorkspacePage> {
                 if (formKey.currentState!.validate()) {
                   final workspaceName =
                       workspaceNameTextFieldController.value.text;
-                  c.addNewWorkspace(workspaceName);
+                  await c.addNewWorkspace(workspaceName);
 
                   Navigator.pop(context);
                   setState(() {});
@@ -317,7 +369,7 @@ class WorskpaceList extends StatelessWidget {
             future: c.getWorkspaceName(workspace),
             builder: (context, nameSnapshot) {
               if (nameSnapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
+                return Container();
               } else if (nameSnapshot.hasError) {
                 return Text("Error: ${nameSnapshot.error}");
               } else {
@@ -328,7 +380,32 @@ class WorskpaceList extends StatelessWidget {
                     builder: ((context, projectSnapshot) {
                       if (projectSnapshot.connectionState ==
                           ConnectionState.waiting) {
-                        return const CircularProgressIndicator();
+                        return Container(
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 20),
+                          child: const Row(
+                            children: [
+                              LoadingBox(
+                                height: 50,
+                                width: 50,
+                                borderRadius: 15,
+                              ),
+                              Gap(20),
+                              Expanded(
+                                child: LoadingBox(
+                                  height: 50,
+                                  borderRadius: 15,
+                                ),
+                              ),
+                              Gap(10),
+                              LoadingBox(
+                                height: 50,
+                                width: 50,
+                                borderRadius: 15,
+                              ),
+                            ],
+                          ),
+                        );
                       } else if (projectSnapshot.hasError) {
                         return Text("Error: ${projectSnapshot.error}");
                       }

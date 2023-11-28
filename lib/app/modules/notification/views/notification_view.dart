@@ -33,8 +33,11 @@ class NotificationView extends StatelessWidget {
                 child: Text("An error encountered"),
               );
             } else if (snapshot.data!.docs.isEmpty) {
-              return const Center(
-                child: Text("Empty"),
+              return Center(
+                child: Text(
+                  "There are no notifications for you",
+                  style: TextStyle(color: Colors.black.withOpacity(0.5)),
+                ),
               );
             }
             final invitationsSnapshot = snapshot.data!.docs;

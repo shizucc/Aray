@@ -3,6 +3,7 @@ import 'package:aray/app/data/model/model_activity.dart';
 import 'package:aray/app/data/model/model_card.dart';
 import 'package:aray/app/data/model/model_checklist.dart';
 import 'package:aray/app/data/model/model_file.dart';
+import 'package:aray/app/global_widgets/loading_text.dart';
 import 'package:aray/app/global_widgets/my_text_button_icon.dart';
 import 'package:aray/app/modules/activity/controller/controller_activity_detail.dart';
 import 'package:aray/utils/date_handler.dart';
@@ -28,7 +29,9 @@ class ActivityDetail extends StatelessWidget {
         if (snapshot.hasError) {
           return const Text("Something went wrong");
         } else if (snapshot.connectionState == ConnectionState.waiting) {
-          return const CircularProgressIndicator();
+          return const Center(
+            child: LoadingText(labelText: "Crunching your data..."),
+          );
         }
         final activitySnapshot = snapshot.data!;
         final Activity activity = activitySnapshot.data()!;
