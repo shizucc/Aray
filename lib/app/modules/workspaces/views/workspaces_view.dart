@@ -1,8 +1,12 @@
+import 'package:aray/app/data/model/model_color_theme.dart';
+import 'package:aray/app/data/model/model_project.dart';
 import 'package:aray/app/data/model/model_workspace.dart';
 import 'package:aray/app/global_widgets/loading_box.dart';
 import 'package:aray/app/global_widgets/loading_text.dart';
 import 'package:aray/app/modules/workspaces/controller/controller_workspace.dart';
 import 'package:aray/app/routes/app_pages.dart';
+import 'package:aray/utils/color_handler.dart';
+import 'package:aray/utils/extension.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -407,7 +411,7 @@ class WorskpaceList extends StatelessWidget {
                           ),
                         );
                       } else if (projectSnapshot.hasError) {
-                        return Text("Error: ${projectSnapshot.error}");
+                        return const Center(child: Text("An error occurred"));
                       }
                       final projectList = projectSnapshot.data;
                       return Obx(() => Column(
@@ -440,7 +444,6 @@ class WorskpaceList extends StatelessWidget {
                                   ),
                                   IconButton(
                                       onPressed: () {
-                                        print("Tombol  ditekan");
                                         Get.toNamed('/workspace/detail',
                                             arguments: {
                                               'workspaceId': workspace.id
@@ -457,6 +460,7 @@ class WorskpaceList extends StatelessWidget {
                                     ? Column(
                                         children: projectList!.map((project) {
                                           return ProjectTile(
+                                              projectSnapshot: project,
                                               title: project.data().name,
                                               image: project.data().personalize[
                                                       'image_link'] ??
@@ -488,21 +492,31 @@ class ProjectTile extends StatelessWidget {
   final Function onTap;
   final String image;
   final String title;
+  final QueryDocumentSnapshot<Project> projectSnapshot;
 
-  const ProjectTile({
-    super.key,
-    required this.title,
-    required this.image,
-    required this.onTap,
-  });
+  const ProjectTile(
+      {super.key,
+      required this.title,
+      required this.image,
+      required this.onTap,
+      required this.projectSnapshot});
 
   @override
   Widget build(BuildContext context) {
+    final Project project = projectSnapshot.data();
+    final bool isUseImage = project.personalize['use_image'] as bool;
+    final Color imageDominantColor = ColorHandler.getColorFromDecimal(
+        project.personalize['image_dominant_color'] ?? 0);
+
+    final defaultTheme = ColorTheme(code: project.personalize['color']);
+    // final bool isImageDominantColorDark = imageDominantColor.isDark;
     return GestureDetector(
       onTap: () => onTap(),
       child: Container(
         decoration: BoxDecoration(
-            color: Colors.grey.withOpacity(0.3),
+            color: isUseImage
+                ? imageDominantColor
+                : Color(defaultTheme.baseColor!),
             borderRadius: BorderRadius.circular(15)),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
         margin: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
@@ -513,7 +527,17 @@ class ProjectTile extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
                 decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.6),
+                    image: isUseImage
+                        ? DecorationImage(
+                            image: NetworkImage(
+                              project.personalize['image_link'],
+                            ),
+                            filterQuality: FilterQuality.low,
+                            fit: BoxFit.cover)
+                        : null,
+                    color: isUseImage
+                        ? imageDominantColor
+                        : Color(defaultTheme.primaryColor!),
                     borderRadius: BorderRadius.circular(10)),
                 child: const Icon(
                   Icons.alarm,
@@ -524,15 +548,27 @@ class ProjectTile extends StatelessWidget {
             ),
             Expanded(
                 child: Text(
-              title,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w400),
+              project.name,
+              style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w400,
+                  color: !isUseImage
+                      ? Colors.black
+                      : imageDominantColor.isDark
+                          ? Colors.white
+                          : Colors.black),
             )),
             Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(15),
                     color: Colors.white),
-                child: const Icon(CupertinoIcons.forward)),
+                child: Icon(
+                  CupertinoIcons.forward,
+                  color: isUseImage
+                      ? imageDominantColor
+                      : Color(defaultTheme.primaryColor!),
+                )),
           ],
         ),
       ),
