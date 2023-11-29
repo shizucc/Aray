@@ -5,12 +5,12 @@ class LoginButtonIcon extends StatelessWidget {
   const LoginButtonIcon(
       {super.key,
       required this.label,
-      required this.icon,
+      required this.imageIcon,
       this.backgroundColor = Colors.white,
       this.labelTextStyle = const TextStyle(),
       required this.onTap});
   final String label;
-  final Icon icon;
+  final Image imageIcon;
   final Color backgroundColor;
   final TextStyle labelTextStyle;
   final Function() onTap;
@@ -40,7 +40,7 @@ class LoginButtonIcon extends StatelessWidget {
                 const SizedBox(
                   width: 15,
                 ),
-                icon,
+                imageIcon
               ],
             ),
           ),

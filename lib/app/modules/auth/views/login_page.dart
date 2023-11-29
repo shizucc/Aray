@@ -18,18 +18,17 @@ class LoginPage extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Placeholder(
-                fallbackHeight: 150,
-                fallbackWidth: 10,
-              ),
-              Gap(40),
+              Container(
+                  margin: EdgeInsets.symmetric(horizontal: 50),
+                  child: Image.asset('assets/app_image/login_image.png')),
+              Gap(30),
               ConstrainedBox(
                   constraints: BoxConstraints(maxWidth: Get.width / 1.5),
                   child: Text(
                     "Manage Your Projects More Easily & More Clean",
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                        color: Colors.black.withOpacity(0.6),
+                        color: Colors.black.withOpacity(0.8),
                         fontSize: 18,
                         letterSpacing: 1),
                   )),
@@ -37,16 +36,17 @@ class LoginPage extends StatelessWidget {
               ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: Get.width / 1.5),
                 child: LoginButtonIcon(
-                    backgroundColor: Colors.purpleAccent,
+                    backgroundColor: const Color(0xffD85AC3),
                     label: "Login With Google",
-                    icon: Icon(
-                      Icons.abc,
-                      color: Colors.white,
+                    imageIcon: Image.asset(
+                      'assets/app_icon/google_icon.png',
+                      height: 18,
+                      width: 18,
                     ),
                     labelTextStyle: TextStyle(
                         color: Colors.white,
                         fontSize: 16,
-                        fontWeight: FontWeight.w600),
+                        fontWeight: FontWeight.w400),
                     onTap: () async {
                       await controller.signInWithGoogle();
                     }),
