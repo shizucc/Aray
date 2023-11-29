@@ -52,25 +52,31 @@ class _WorkspacePageState extends State<WorkspacePage> {
                   child: Text("An error occurred while loading your projects"),
                 );
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "Let's Start by create or join a workspace!",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontSize: 20, color: Colors.black.withOpacity(0.5)),
+                return Center(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          "Let's Start by create or join a workspace!",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.black.withOpacity(0.5)),
+                        ),
+                        TextButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) =>
+                                    addWorkspaceDialog(context, a, c),
+                              );
+                            },
+                            child: const Text("Add New Workspace"))
+                      ],
                     ),
-                    TextButton(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) =>
-                                addWorkspaceDialog(context, a, c),
-                          );
-                        },
-                        child: const Text("Add New Workspace"))
-                  ],
+                  ),
                 );
               } else {
                 final workspaces = snapshot.data!;

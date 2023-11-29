@@ -12,17 +12,23 @@ class LoginPage extends StatelessWidget {
       appBar: AppBar(
         title: Text("Login Page"),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text("Ini adalah Button untuk Login"),
-            ElevatedButton(
-                onPressed: () {
-                  controller.signInWithGoogle();
-                },
-                child: Text("Login"))
-          ],
+      body: SafeArea(
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Placeholder(
+                fallbackHeight: 150,
+                fallbackWidth: 10,
+              ),
+              Text("Ini adalah Button untuk Login"),
+              ElevatedButton(
+                  onPressed: () {
+                    controller.signInWithGoogle();
+                  },
+                  child: Text("Login"))
+            ],
+          ),
         ),
       ),
     );
