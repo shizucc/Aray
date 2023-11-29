@@ -134,13 +134,6 @@ class _WorkspacePageState extends State<WorkspacePage> {
                     label: const Text("Notifications")),
                 TextButton.icon(
                     onPressed: () {
-                      Get.toNamed('/notification');
-                    },
-                    style: const ButtonStyle(alignment: Alignment.centerLeft),
-                    icon: const Icon(Icons.notifications),
-                    label: const Text("Splashscreen")),
-                TextButton.icon(
-                    onPressed: () {
                       showDialog(
                         context: context,
                         builder: (context) => logoutDialog(c),
@@ -388,7 +381,7 @@ class WorskpaceList extends StatelessWidget {
               if (nameSnapshot.connectionState == ConnectionState.waiting) {
                 return Container();
               } else if (nameSnapshot.hasError) {
-                return Text("Error: ${nameSnapshot.error}");
+                return Container();
               } else {
                 final workspaceName = nameSnapshot.data;
                 final projects = c.fetchProjects(workspace);
