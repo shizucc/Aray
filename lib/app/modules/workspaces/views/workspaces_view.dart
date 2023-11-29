@@ -509,67 +509,71 @@ class ProjectTile extends StatelessWidget {
         project.personalize['image_dominant_color'] ?? 0);
 
     final defaultTheme = ColorTheme(code: project.personalize['color']);
-    // final bool isImageDominantColorDark = imageDominantColor.isDark;
-    return GestureDetector(
-      onTap: () => onTap(),
-      child: Container(
-        decoration: BoxDecoration(
-            color: isUseImage
-                ? imageDominantColor
-                : Color(defaultTheme.baseColor!),
-            borderRadius: BorderRadius.circular(15)),
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
-        margin: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
-        width: Get.width,
-        child: Row(
-          children: [
-            Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
-                decoration: BoxDecoration(
-                    image: isUseImage
-                        ? DecorationImage(
-                            image: NetworkImage(
-                              project.personalize['image_link'],
-                            ),
-                            filterQuality: FilterQuality.low,
-                            fit: BoxFit.cover)
-                        : null,
-                    color: isUseImage
-                        ? imageDominantColor
-                        : Color(defaultTheme.primaryColor!),
-                    borderRadius: BorderRadius.circular(10)),
-                child: const Icon(
-                  Icons.alarm,
-                  color: Colors.transparent,
+    return Container(
+      decoration: BoxDecoration(
+          color:
+              isUseImage ? imageDominantColor : Color(defaultTheme.baseColor!),
+          borderRadius: BorderRadius.circular(15)),
+      margin: const EdgeInsets.symmetric(vertical: 7, horizontal: 10),
+      width: Get.width,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(15),
+          onTap: () => onTap(),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+            child: Row(
+              children: [
+                Container(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
+                    decoration: BoxDecoration(
+                        image: isUseImage
+                            ? DecorationImage(
+                                image: NetworkImage(
+                                  project.personalize['image_link'],
+                                ),
+                                filterQuality: FilterQuality.low,
+                                fit: BoxFit.cover)
+                            : null,
+                        color: isUseImage
+                            ? imageDominantColor
+                            : Color(defaultTheme.primaryColor!),
+                        borderRadius: BorderRadius.circular(10)),
+                    child: const Icon(
+                      Icons.alarm,
+                      color: Colors.transparent,
+                    )),
+                const SizedBox(
+                  width: 15,
+                ),
+                Expanded(
+                    child: Text(
+                  project.name,
+                  style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: !isUseImage
+                          ? Colors.black
+                          : imageDominantColor.isDark
+                              ? Colors.white
+                              : Colors.black),
                 )),
-            const SizedBox(
-              width: 15,
+                Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
+                        color: Colors.white),
+                    child: Icon(
+                      CupertinoIcons.forward,
+                      color: isUseImage
+                          ? imageDominantColor
+                          : Color(defaultTheme.primaryColor!),
+                    )),
+              ],
             ),
-            Expanded(
-                child: Text(
-              project.name,
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w400,
-                  color: !isUseImage
-                      ? Colors.black
-                      : imageDominantColor.isDark
-                          ? Colors.white
-                          : Colors.black),
-            )),
-            Container(
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(15),
-                    color: Colors.white),
-                child: Icon(
-                  CupertinoIcons.forward,
-                  color: isUseImage
-                      ? imageDominantColor
-                      : Color(defaultTheme.primaryColor!),
-                )),
-          ],
+          ),
         ),
       ),
     );
