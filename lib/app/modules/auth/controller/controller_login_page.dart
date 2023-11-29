@@ -22,7 +22,7 @@ class LoginPageController extends GetxController {
   }
 
   // Fungsi untuk login by gogle
-  void signInWithGoogle() async {
+  Future<void> signInWithGoogle() async {
     GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
     GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
