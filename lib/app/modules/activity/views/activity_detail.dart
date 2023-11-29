@@ -1002,10 +1002,10 @@ class ActivityNameField extends StatelessWidget {
               future: c.getCard(),
               builder: (context, snapshot) {
                 if (snapshot.hasError) {
-                  return const Text("Something went wrong");
+                  return const Text("An Error occurred");
                 } else if (snapshot.connectionState ==
                     ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
+                  return Container();
                 }
                 final CardModel card = snapshot.data!;
                 return Text("In Card '${card.name}'",

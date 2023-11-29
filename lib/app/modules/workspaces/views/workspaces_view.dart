@@ -134,6 +134,13 @@ class _WorkspacePageState extends State<WorkspacePage> {
                     label: const Text("Notifications")),
                 TextButton.icon(
                     onPressed: () {
+                      Get.toNamed('/notification');
+                    },
+                    style: const ButtonStyle(alignment: Alignment.centerLeft),
+                    icon: const Icon(Icons.notifications),
+                    label: const Text("Splashscreen")),
+                TextButton.icon(
+                    onPressed: () {
                       showDialog(
                         context: context,
                         builder: (context) => logoutDialog(c),

@@ -63,7 +63,8 @@ class LoginPage extends StatelessWidget {
                   const Gap(5),
                   const Text(
                     "Aray[Project]",
-                    style: TextStyle(fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                        fontWeight: FontWeight.w500, fontFamily: 'Raleway'),
                   )
                 ],
               ),
