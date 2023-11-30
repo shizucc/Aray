@@ -1,8 +1,7 @@
-# Aray[project]
+# Aray[project] Pre-Release 1.0
 
 A Task Management App
 
 ## Getting Started
 
-Comming Soon
-Stay Tuned!
+Pre-Release 1.0 is comming out!
