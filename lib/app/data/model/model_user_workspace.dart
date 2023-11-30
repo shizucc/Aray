@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserWorkspace {
-  String? userId;
-  String? workspaceId;
+  String userId;
+  String workspaceId;
   DateTime joinDate;
-  String? permission;
+  String permission;
 
   UserWorkspace(
       {required this.userId,
@@ -13,10 +13,10 @@ class UserWorkspace {
       required this.permission});
 
   factory UserWorkspace.fromJson(Map<String, dynamic> json) => UserWorkspace(
-      userId: json['user_id'],
-      workspaceId: json['workspace_id'],
+      userId: json['user_id'] ?? '',
+      workspaceId: json['workspace_id'] ?? '',
       joinDate: (json['join_date'] as Timestamp).toDate(),
-      permission: json['permission']);
+      permission: json['permission'] ?? '');
 
   Map<String, Object?> toJson() {
     return {

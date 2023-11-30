@@ -1,5 +1,3 @@
-import 'package:aray/app/data/model/model_project.dart';
-import 'package:aray/app/data/model/model_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Workspace {
@@ -15,8 +13,8 @@ class Workspace {
       this.updatedAt});
 
   factory Workspace.fromJson(Map<String, dynamic> json) => Workspace(
-        name: json['name'],
-        description: json['description'],
+        name: json['name'] as String,
+        description: json['description'] as String,
         updatedAt: (json['updated_at'] as Timestamp).toDate(),
         createdAt: DateTime.now(),
       );

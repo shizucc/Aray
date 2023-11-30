@@ -19,11 +19,10 @@ class LoginPageController extends GetxController {
   Future<void> setSession(String id) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('userId', id);
-    print("Session Saved");
   }
 
   // Fungsi untuk login by gogle
-  void signInWithGoogle() async {
+  Future<void> signInWithGoogle() async {
     GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
     GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
@@ -36,7 +35,7 @@ class LoginPageController extends GetxController {
     UserCredential userCredential =
         await FirebaseAuth.instance.signInWithCredential(credential);
 
-    checkUser(userCredential);
+    await checkUser(userCredential);
   }
 
   // Fungsi untuk mengecek User sudah terdaftar atau belum (jika belum masukan ke database)
@@ -48,17 +47,15 @@ class LoginPageController extends GetxController {
         .where('username', isEqualTo: userCredential.user?.displayName)
         .where('email', isEqualTo: userCredential.user?.email)
         .get();
-
+    await setSession(username.docs.first.id);
     if (username.docs.isNotEmpty) {
-      print(username.docs.first.data().email);
-      print(username.docs.first.id);
     } else {
       userRef
           .add(UserModel(
-              email: userCredential.user?.email,
-              username: userCredential.user?.displayName))
+              email: userCredential.user!.email!,
+              username: userCredential.user!.displayName!,
+              joinDate: DateTime.now()))
           .then((_) {});
     }
-    setSession(username.docs.first.id);
   }
 }
